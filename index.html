@@ -143,11 +143,14 @@ header p{color:#bfdbfe;font-size:.78rem;margin-top:3px}
   </div>
   <div class="radius-chips" style="max-width:800px;margin:8px auto 0">
     <span style="font-size:.7rem;color:var(--faint);align-self:center">Radio:</span>
-    <div class="rc2 on" id="r300" onclick="setR(300)">300m</div>
+    <div class="rc2" id="r300" onclick="setR(300)">300m</div>
     <div class="rc2" id="r500" onclick="setR(500)">500m</div>
-    <div class="rc2" id="r1000" onclick="setR(1000)">1 km</div>
+    <div class="rc2 on" id="r1000" onclick="setR(1000)">1 km</div>
     <div class="rc2" id="r2000" onclick="setR(2000)">2 km</div>
     <div class="rc2" id="r5000" onclick="setR(5000)">5 km</div>
+    <div class="rc2" id="r10000" onclick="setR(10000)">10 km</div>
+    <div class="rc2" id="r25000" onclick="setR(25000)">25 km</div>
+    <div class="rc2" id="r50000" onclick="setR(50000)">50 km</div>
   </div>
 </div>
 
@@ -195,18 +198,50 @@ const CAT_MAP = [
 const DEFAULT_TAGS = [{k:'amenity',v:'restaurant'}];
 const DEFAULT_LABEL = 'Negocio';
 
+// Todos los tipos de negocio para modo general
+const ALL_BUSINESS_TAGS = [
+  {k:'amenity',v:'restaurant'},{k:'amenity',v:'cafe'},{k:'amenity',v:'bar'},
+  {k:'amenity',v:'pub'},{k:'amenity',v:'fast_food'},{k:'amenity',v:'dentist'},
+  {k:'amenity',v:'pharmacy'},{k:'amenity',v:'clinic'},{k:'amenity',v:'doctors'},
+  {k:'amenity',v:'veterinary'},{k:'amenity',v:'gym'},
+  {k:'tourism',v:'hotel'},{k:'tourism',v:'hostel'},{k:'tourism',v:'guest_house'},
+  {k:'shop',v:'hairdresser'},{k:'shop',v:'barber'},{k:'shop',v:'beauty'},
+  {k:'shop',v:'car_repair'},{k:'shop',v:'laundry'},{k:'shop',v:'bakery'},
+  {k:'shop',v:'clothes'},{k:'shop',v:'supermarket'},{k:'shop',v:'convenience'},
+  {k:'shop',v:'jewelry'},{k:'shop',v:'optician'},{k:'shop',v:'florist'},
+  {k:'leisure',v:'fitness_centre'},{k:'craft',v:'electrician'},{k:'craft',v:'plumber'},
+];
+
+function getTypeLabel(t){
+  const map = {
+    restaurant:'Restaurante',cafe:'Cafetería',bar:'Bar',pub:'Bar/Pub',
+    fast_food:'Comida rápida',dentist:'Dentista',pharmacy:'Farmacia',
+    clinic:'Clínica',doctors:'Médico',veterinary:'Veterinario',gym:'Gimnasio',
+    hotel:'Hotel',hostel:'Hostal',guest_house:'Pensión',
+    hairdresser:'Peluquería',barber:'Barbería',beauty:'Estética',
+    car_repair:'Taller',laundry:'Lavandería',bakery:'Panadería',
+    clothes:'Tienda ropa',supermarket:'Supermercado',convenience:'Tienda',
+    jewelry:'Joyería',optician:'Óptica',florist:'Floristería',
+    fitness_centre:'Gimnasio',electrician:'Electricista',plumber:'Fontanero',
+  };
+  for(const [k,v] of Object.entries(t||{})){
+    if(map[v]) return map[v];
+  }
+  return 'Negocio';
+}
+
 // ── ESTADO ─────────────────────────────────────────────────────────
 let calls = [];
 let curIdx = 0;
 let ftab = 'all';
 let fq = '';
-let searchRadius = 300;
+let searchRadius = 1000;
 
 // ── UI HELPERS ─────────────────────────────────────────────────────
 function setQ(v){ document.getElementById('q').value=v; }
 function setR(v){
   searchRadius=v;
-  ['300','500','1000','2000','5000'].forEach(r=>{
+  ['300','500','1000','2000','5000','10000','25000','50000'].forEach(r=>{
     const el=document.getElementById('r'+r);
     if(el) el.classList.toggle('on', parseInt(r)===v);
   });
@@ -243,51 +278,54 @@ async function buscar(){
   `);
 
   try {
-    // 1. Detectar categoría
+    // 1. Detectar categoría — si no hay ninguna, busca TODOS los negocios
     const cat = detectCat(raw);
-    const tags = cat ? cat.tags : DEFAULT_TAGS;
-    const label = cat ? cat.label : DEFAULT_LABEL;
-    setLS(`Buscando ${label.toLowerCase()} en "${raw}"...`);
+    const todosModo = !cat; // modo "todos los negocios de la zona"
+    const tags = cat ? cat.tags : ALL_BUSINESS_TAGS;
+    const label = cat ? cat.label : 'Negocios';
+    setLS(todosModo ? `Buscando todos los negocios sin web en la zona...` : `Buscando ${label.toLowerCase()}...`);
 
-    // 2. Geocodificar zona con Nominatim (gratis, sin key)
-    // Quitar palabras de categoría para obtener solo la zona
+    // 2. Geocodificar
     const zoneText = limpiarZona(raw);
     setLD(`Localizando: "${zoneText}"`);
     const coords = await geocodeNominatim(zoneText);
-    setLS(`Encontrado en ${coords.display}. Buscando negocios...`);
-    setLD(`Radio: ${searchRadius}m · Categoría: ${label}`);
+    setLS(`📍 ${coords.display} · Buscando negocios sin web...`);
+    setLD(`Radio: ${searchRadius}m`);
 
-    // 3. Overpass API query
+    // 3. Overpass query
     const places = await overpassQuery(coords.lat, coords.lon, tags, searchRadius);
-    setLS(`Procesando ${places.length} resultados...`);
-    setLD('Filtrando los que no tienen web y tienen teléfono...');
+    setLS(`Encontrados ${places.length} negocios. Filtrando los sin web...`);
+    setLD('Solo se mostrarán los que NO tienen página web registrada');
 
-    // 4. Filtrar: sin web, con teléfono
+    // 4. Filtrar: sin web. El teléfono es opcional (muchos no lo tienen en OSM)
     calls = [];
+    const sinTelef = [];
     for(const p of places){
       const t = p.tags||{};
-      const name = t.name||t['name:es']||'Sin nombre';
-      const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||'');
-      const website = t.website||t['contact:website']||t.url||'';
-      if(website || !phone) continue; // skip si tiene web o no tiene teléfono
+      const name = t.name||t['name:es']||'';
+      if(!name) continue; // sin nombre = no sirve
+      const website = t.website||t['contact:website']||t.url||t['website:es']||t['contact:url']||'';
+      if(website) continue; // tiene web → skip
 
+      const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||t['contact:mobile']||'');
       const addr = buildAddr(t);
-      const typeLabel = label;
+      const typeLabel = getTypeLabel(t);
       const mapsUrl = `https://www.openstreetmap.org/${p.type}/${p.id}`;
-      calls.push({
-        id: `${p.type}/${p.id}`,
-        name, phone, address: addr,
-        typeLabel, mapsUrl,
-        status:'pending', notes:''
-      });
+      const obj = { id:`${p.type}/${p.id}`, name, phone, address:addr, typeLabel, mapsUrl, status:'pending', notes:'' };
+
+      if(phone) calls.push(obj);
+      else sinTelef.push(obj);
     }
+
+    // Primero los que tienen teléfono, luego los sin teléfono
+    calls = [...calls, ...sinTelef];
 
     if(!calls.length){
       setLayout(`
         <div class="center">
-          <div class="ico">😔</div>
-          <p>No se encontraron <strong>${label.toLowerCase()}</strong> sin web y con teléfono en esta zona.<br><br>
-          Prueba con un <strong>radio mayor</strong>, otra <strong>categoría</strong> o una zona diferente.</p>
+          <div class="ico">🎉</div>
+          <p>Todos los negocios encontrados en esta zona <strong>ya tienen web</strong>, o no aparecen en OpenStreetMap.<br><br>
+          Prueba con un <strong>radio mayor</strong> o una zona diferente.</p>
         </div>
       `);
       return;
@@ -489,22 +527,28 @@ function renderAll(){
 }
 
 function callCard(c){
+  const hasPhone = !!c.phone;
   return `
-    <div class="cc-num">#${curIdx+1} de ${calls.length}</div>
+    <div class="cc-num">#${curIdx+1} de ${calls.length} &nbsp;·&nbsp; ${esc(c.typeLabel)} &nbsp;·&nbsp; ❌ Sin web</div>
     <div class="cc-name">${esc(c.name)}</div>
-    <div class="cc-addr">📍 ${esc(c.address)||'Sin dirección registrada'}</div>
-    <div class="cc-badge">${esc(c.typeLabel)}</div>
-    <div class="cc-phone"><a href="tel:${esc(c.phone.replace(/\s/g,''))}">${esc(c.phone)}</a></div>
+    ${c.address ? `<div class="cc-addr">📍 ${esc(c.address)}</div>` : ''}
+    ${hasPhone
+      ? `<div class="cc-phone"><a href="tel:${esc(c.phone.replace(/\D/g,''))}">${esc(c.phone)}</a></div>
+         <div style="font-size:.72rem;color:var(--faint);margin:-10px 0 14px">Toca el número para llamar</div>`
+      : `<div style="background:#1e293b;border:1px dashed var(--b);border-radius:8px;padding:12px;margin-bottom:14px;color:var(--faint);font-size:.82rem">
+           📵 Sin teléfono registrado — busca en Google: <strong>${esc(c.name)}</strong>
+         </div>`
+    }
     <div class="act-grid">
       <button class="a a1" onclick="mark('interested')"><span class="i">✅</span>Interesado</button>
       <button class="a a2" onclick="mark('callback')"><span class="i">🔄</span>Rellamar</button>
       <button class="a a3" onclick="mark('no')"><span class="i">❌</span>No interesa</button>
-      <button class="a a4" onclick="mark('skip')"><span class="i">⏭️</span>Saltar</button>
+      <button class="a a4" onclick="mark('skip')"><span class="i">⏭️</span>Siguiente</button>
     </div>
-    <div class="notes-row">
-      <textarea class="notes-inp" rows="2" placeholder="Notas: nombre del contacto, qué dijo..."
+    <div class="notes-row" style="margin-top:10px">
+      <textarea class="notes-inp" rows="2" placeholder="Notas: nombre, qué dijo, cuándo rellamar..."
         onchange="calls[${curIdx}].notes=this.value">${esc(c.notes)}</textarea>
-      <a class="maps-link" href="${esc(c.mapsUrl)}" target="_blank">🗺️<br>OSM</a>
+      <a class="maps-link" href="${esc(c.mapsUrl)}" target="_blank">🗺️<br>Ver</a>
     </div>
   `;
 }
