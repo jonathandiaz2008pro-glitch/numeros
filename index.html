@@ -384,6 +384,19 @@ const OVERPASS_SERVERS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
+async function fetchWithTimeout(url, options, ms=8000){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), ms);
+  try{
+    const r = await fetch(url, {...options, signal: ctrl.signal});
+    clearTimeout(timer);
+    return r;
+  }catch(e){
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
 async function overpassQuery(lat, lon, tags, radius){
   const around=`(around:${radius},${lat},${lon})`;
   let parts=[];
@@ -391,21 +404,23 @@ async function overpassQuery(lat, lon, tags, radius){
     parts.push(`node["${tag.k}"="${tag.v}"]${around};`);
     parts.push(`way["${tag.k}"="${tag.v}"]${around};`);
   }
-  const q=`[out:json][timeout:25];(${parts.join('')});out center 200;`;
+  const q=`[out:json][timeout:15];(${parts.join('')});out center 200;`;
   const body='data='+encodeURIComponent(q);
 
-  for(const server of OVERPASS_SERVERS){
+  for(let i=0; i<OVERPASS_SERVERS.length; i++){
+    const server=OVERPASS_SERVERS[i];
+    setLD(`Conectando al servidor ${i+1}/${OVERPASS_SERVERS.length}...`);
     try{
-      const r=await fetch(server,{
+      const r=await fetchWithTimeout(server,{
         method:'POST', body,
         headers:{'Content-Type':'application/x-www-form-urlencoded'}
-      });
+      }, 10000);
       if(!r.ok) continue;
       const d=await r.json();
       return d.elements||[];
-    }catch(e){ /* prueba siguiente servidor */ }
+    }catch(e){ /* prueba siguiente */ }
   }
-  throw new Error('No se pudo conectar a OpenStreetMap. Comprueba tu conexión a internet.');
+  throw new Error('Los servidores de OpenStreetMap no responden. Inténtalo de nuevo en unos segundos.');
 }
 
 // ── HELPERS DE DATOS ───────────────────────────────────────────────
