@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcador de Negocios Sin Web</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--surface:#1e293b;--border:#334155;
+  --accent:#6366f1;--accent2:#7c3aed;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --text:#f1f5f9;--muted:#94a3b8;--faint:#475569;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#1e3a8a,#4c1d95);padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.header h1{font-size:1.3rem;font-weight:800;flex:1}
+.header p{color:#bfdbfe;font-size:.8rem;width:100%}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 70px)}
+@media(max-width:700px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+
+/* ── SIDEBAR ── */
+.sidebar{background:#0c1425;border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+
+.label{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:.9rem;transition:border .15s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--faint)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.75rem;cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:#312e81;border-color:var(--accent);color:#a5b4fc;font-weight:600}
+
+.range-row{display:flex;align-items:center;gap:10px}
+.range-row input[type=range]{flex:1;accent-color:var(--accent)}
+.range-val{color:#a5b4fc;font-weight:700;font-size:.85rem;min-width:45px;text-align:right}
+
+.btn{border:none;border-radius:10px;padding:13px;cursor:pointer;font-size:.9rem;font-weight:700;transition:all .15s;width:100%}
+.btn-search{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-search:hover{opacity:.9;transform:translateY(-1px)}
+.btn-search:disabled{background:var(--border);color:var(--faint);transform:none;cursor:not-allowed}
+
+.api-row{display:flex;gap:8px}
+.api-row .inp{border-radius:8px;padding:9px 12px;font-size:.82rem}
+.api-row button{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:.75rem;white-space:nowrap;transition:all .15s}
+.api-row button:hover{border-color:var(--accent);color:#a5b4fc}
+
+.api-hint{font-size:.72rem;color:var(--faint);line-height:1.6}
+.api-hint a{color:#60a5fa}
+
+.key-ok{color:var(--green);font-size:.75rem;margin-top:4px}
+
+/* ── MAIN PANEL ── */
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+/* STATS TOP */
+.stats-top{display:flex;gap:1px;background:var(--border);border-bottom:1px solid var(--border);flex-shrink:0}
+.stat-pill{flex:1;background:var(--surface);padding:10px;text-align:center}
+.stat-pill .num{font-size:1.3rem;font-weight:800}
+.stat-pill .lbl{font-size:.65rem;text-transform:uppercase;color:var(--muted);letter-spacing:.3px}
+.num-green{color:var(--green)}
+.num-yellow{color:var(--yellow)}
+.num-red{color:var(--red)}
+.num-blue{color:var(--blue)}
+
+/* CURRENT CALL CARD */
+.call-panel{padding:20px;border-bottom:1px solid var(--border);flex-shrink:0;background:#0c1425}
+.call-panel.hidden{display:none}
+
+.call-number{font-size:.72rem;color:var(--muted);margin-bottom:8px}
+.call-name{font-size:1.4rem;font-weight:800;line-height:1.2;margin-bottom:4px}
+.call-addr{color:var(--muted);font-size:.82rem;margin-bottom:4px}
+.call-type-badge{display:inline-block;background:#2e1065;color:#a5b4fc;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.call-phone{font-size:2rem;font-weight:900;color:var(--green);letter-spacing:1px;margin-bottom:16px}
+.call-phone a{color:inherit;text-decoration:none}
+.call-phone a:hover{text-decoration:underline}
+
+.action-btns{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.act-btn{border:none;border-radius:10px;padding:12px 8px;cursor:pointer;font-size:.78rem;font-weight:700;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.act-btn .ico{font-size:1.3rem}
+.act-btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.act-interested{background:#065f46;color:#6ee7b7}
+.act-callback{background:#78350f;color:#fcd34d}
+.act-no{background:#7f1d1d;color:#fca5a5}
+.act-skip{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+
+.notes-row{display:flex;gap:8px;margin-top:10px}
+.notes-inp{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.82rem;resize:none}
+.notes-inp:focus{outline:none;border-color:var(--accent)}
+
+/* CALL LIST */
+.list-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface)}
+.list-header input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:.8rem}
+.list-header input:focus{outline:none;border-color:var(--accent)}
+.filter-tabs{display:flex;gap:4px}
+.ftab{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.72rem;cursor:pointer;color:var(--muted);transition:all .15s}
+.ftab.on{background:#312e81;border-color:var(--accent);color:#a5b4fc}
+
+.list-scroll{flex:1;overflow-y:auto;padding:10px 12px}
+.list-scroll::-webkit-scrollbar{width:4px}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .12s;border:1px solid transparent;margin-bottom:5px}
+.list-item:hover{background:var(--surface);border-color:var(--border)}
+.list-item.active{background:#1e1b4b;border-color:var(--accent)}
+.li-index{font-size:.7rem;color:var(--faint);min-width:22px;text-align:right;flex-shrink:0}
+.li-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0}
+.dot-pending{background:var(--border)}
+.dot-interested{background:var(--green)}
+.dot-callback{background:var(--yellow)}
+.dot-no{background:var(--red)}
+.dot-skip{background:var(--faint)}
+.li-info{flex:1;min-width:0}
+.li-name{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-sub{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-phone{font-size:.72rem;color:var(--green);flex-shrink:0}
+
+/* LOADING / EMPTY */
+.center-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--faint);gap:12px;text-align:center;padding:40px}
+.center-msg .ico{font-size:3rem}
+.center-msg p{font-size:.88rem;line-height:1.7;max-width:280px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-msg{font-size:.82rem;color:var(--muted);text-align:center}
+
+/* EXPORT */
+.bottom-bar{padding:10px 16px;border-top:1px solid var(--border);background:var(--surface);display:flex;gap:8px;flex-shrink:0}
+.bottom-bar button{background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:.75rem;cursor:pointer;transition:all .15s}
+.bottom-bar button:hover{border-color:var(--accent);color:#a5b4fc}
+
+.progress-mini{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0c1425;border-bottom:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+.progress-mini .bar{flex:1;background:var(--border);border-radius:4px;height:4px;overflow:hidden}
+.progress-mini .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .3s}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📞 Marcador — Negocios Sin Web</h1>
+    <p>Busca una zona · Obtén hasta 100 negocios sin web con teléfono · Llama uno a uno</p>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+
+    <div>
+      <div class="label">🔑 API Key de Google Maps</div>
+      <div class="api-row">
+        <input class="inp" type="password" id="apiKey" placeholder="AIza...">
+        <button onclick="saveKey()">💾 Guardar</button>
+      </div>
+      <div id="keyOk"></div>
+      <div class="api-hint" style="margin-top:6px">
+        Activa <strong>Places API</strong> en
+        <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div class="label">📍 Zona de búsqueda</div>
+      <input class="inp" id="zone" placeholder="Ej: Madrid centro, Gracia Barcelona, Triana Sevilla..." />
+    </div>
+
+    <div>
+      <div class="label">🏷️ Tipo de negocio</div>
+      <div class="chips" id="catChips"></div>
+    </div>
+
+    <div>
+      <div class="label">📏 Radio de búsqueda</div>
+      <div class="range-row">
+        <input type="range" id="radius" min="500" max="5000" step="500" value="1500" oninput="updateRadius()">
+        <span class="val-label range-val" id="radiusLbl">1.5 km</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="label">🔢 Máximo de resultados</div>
+      <select class="inp" id="maxResults">
+        <option value="20">20 negocios</option>
+        <option value="50">50 negocios</option>
+        <option value="100" selected>100 negocios</option>
+        <option value="200">200 negocios</option>
+      </select>
+    </div>
+
+    <button class="btn btn-search" id="searchBtn" onclick="doSearch()">
+      🔎 Buscar negocios sin web
+    </button>
+
+    <div style="border-top:1px solid var(--border);padding-top:10px;font-size:.75rem;color:var(--faint);line-height:1.8">
+      <strong style="color:var(--muted)">Cómo usar:</strong><br>
+      1. Guarda tu API Key<br>
+      2. Escribe la zona (barrio, ciudad...)<br>
+      3. Elige categoría y radio<br>
+      4. Pulsa Buscar<br>
+      5. Llama y marca cada resultado
+    </div>
+
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="main" id="mainPanel">
+
+    <!-- Estado inicial -->
+    <div class="center-msg" id="emptyState">
+      <div class="ico">📞</div>
+      <p>Configura la búsqueda en el panel izquierdo y pulsa <strong>Buscar</strong> para obtener tu lista de llamadas.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const CATS = [
+  {k:'restaurant',l:'🍽️ Restaurantes'},
+  {k:'cafe',l:'☕ Cafeterías'},
+  {k:'bar',l:'🍺 Bares'},
+  {k:'lodging',l:'🏨 Hoteles'},
+  {k:'hair_care',l:'✂️ Peluquerías'},
+  {k:'gym',l:'💪 Gimnasios'},
+  {k:'beauty_salon',l:'💅 Estética'},
+  {k:'car_repair',l:'🚗 Talleres'},
+  {k:'dentist',l:'🦷 Dentistas'},
+  {k:'pharmacy',l:'💊 Farmacias'},
+  {k:'bakery',l:'🥐 Panaderías'},
+  {k:'clothing_store',l:'👗 Tiendas ropa'},
+  {k:'electrician',l:'⚡ Electricistas'},
+  {k:'plumber',l:'🔧 Fontaneros'},
+  {k:'laundry',l:'🧺 Lavanderías'},
+  {k:'supermarket',l:'🛒 Supermercados'},
+];
+const TYPE_MAP = Object.fromEntries(CATS.map(c=>[c.k, c.l.replace(/^\S+ /,'')]));
+
+let apiKey = localStorage.getItem('gkey')||'';
+let selectedCat = 'restaurant';
+let calls = [];      // lista de negocios
+let currentIdx = 0;
+let filterTab = 'all';
+let filterQ = '';
+
+// ── INIT ──────────────────────────────────────────────────────────
+(()=>{
+  if(apiKey){
+    document.getElementById('apiKey').value = apiKey;
+    document.getElementById('keyOk').innerHTML = '<div class="key-ok">✅ API Key guardada</div>';
+  }
+  renderChips();
+  updateRadius();
+})();
+
+function saveKey(){
+  const k = document.getElementById('apiKey').value.trim();
+  if(!k) return alert('Pega tu API Key primero');
+  apiKey = k;
+  localStorage.setItem('gkey', k);
+  document.getElementById('keyOk').innerHTML = '<div class="key-ok">✅ Guardada correctamente</div>';
+}
+
+// ── CHIPS ─────────────────────────────────────────────────────────
+function renderChips(){
+  document.getElementById('catChips').innerHTML = CATS.map(c=>`
+    <div class="chip ${c.k===selectedCat?'on':''}" onclick="selectCat('${c.k}',this)">${c.l}</div>
+  `).join('');
+}
+function selectCat(k, el){
+  selectedCat = k;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+function updateRadius(){
+  const v = document.getElementById('radius').value;
+  document.getElementById('radiusLbl').textContent = (v/1000).toFixed(1).replace('.0','')+' km';
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────
+async function doSearch(){
+  if(!apiKey) return alert('Guarda primero tu API Key de Google Maps');
+  const zone = document.getElementById('zone').value.trim();
+  if(!zone) return alert('Escribe una zona (ej: "Madrid centro")');
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true; btn.textContent = '⏳ Buscando...';
+
+  setMain(`
+    <div class="center-msg">
+      <div class="spinner"></div>
+      <div class="load-msg" id="loadMsg">Localizando la zona...</div>
+    </div>
+  `);
+
+  try {
+    // 1. Geocode the zone
+    const coords = await geocode(zone);
+    setLoadMsg(`Buscando negocios en ${zone}...`);
+
+    // 2. Nearby search with pagination
+    const radius = document.getElementById('radius').value;
+    const maxN = parseInt(document.getElementById('maxResults').value);
+    const places = await fetchPlaces(coords.lat, coords.lng, selectedCat, radius, maxN);
+
+    if(!places.length){ setMain(`<div class="center-msg"><div class="ico">😔</div><p>No se encontraron negocios de este tipo en la zona.<br>Prueba con un radio mayor o diferente categoría.</p></div>`); return; }
+
+    setLoadMsg(`Verificando ${places.length} negocios (buscando los que no tienen web)...`);
+
+    // 3. Get details & filter no-website
+    calls = [];
+    let checked = 0;
+    for(const p of places){
+      setLoadMsg(`Verificando ${++checked}/${places.length}... (sin web encontrados: ${calls.length})`);
+      const d = await placeDetails(p.place_id);
+      if(!d.website && (d.formatted_phone_number || d.international_phone_number)){
+        calls.push({
+          id: p.place_id,
+          name: d.name||p.name,
+          address: d.formatted_address||p.vicinity||'',
+          phone: d.formatted_phone_number||d.international_phone_number||'',
+          types: d.types||p.types||[],
+          rating: d.rating||p.rating||0,
+          reviews: d.user_ratings_total||0,
+          mapsUrl: d.url||'',
+          status: 'pending',  // pending | interested | callback | no | skip
+          notes: ''
+        });
+        if(calls.length >= maxN) break;
+      }
+      await sleep(50);
+    }
+
+    if(!calls.length){
+      setMain(`<div class="center-msg"><div class="ico">🎉</div><p>¡Todos los negocios encontrados ya tienen web!<br>Prueba otra categoría o zona.</p></div>`);
+      return;
+    }
+
+    currentIdx = 0;
+    filterTab = 'all'; filterQ = '';
+    renderMain();
+
+  } catch(e){
+    setMain(`<div class="center-msg"><div class="ico">❌</div><p><strong>Error:</strong> ${e.message}</p></div>`);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔎 Buscar negocios sin web';
+  }
+}
+
+// ── API CALLS ─────────────────────────────────────────────────────
+async function geocode(q){
+  const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q+' España')}&key=${apiKey}`);
+  const d = await r.json();
+  if(d.status==='REQUEST_DENIED') throw new Error('API Key inválida o Geocoding API no activada');
+  if(d.status!=='OK') throw new Error('No se encontró la zona: '+q);
+  return d.results[0].geometry.location;
+}
+
+async function fetchPlaces(lat, lng, type, radius, maxN){
+  let all=[], token=null, page=0;
+  do {
+    let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}`;
+    if(token) url += '&pagetoken='+token;
+    const r = await fetch(url);
+    const d = await r.json();
+    if(d.status==='REQUEST_DENIED') throw new Error('API Key inválida o Places API no activada');
+    if(d.status!=='OK' && d.status!=='ZERO_RESULTS') throw new Error('Places API: '+d.status);
+    all.push(...(d.results||[]));
+    token = d.next_page_token||null;
+    page++;
+    if(token && all.length < maxN*2) await sleep(2100);
+  } while(token && page<3 && all.length < maxN*2);
+  return all.slice(0, maxN*2); // fetch extra since we'll filter
+}
+
+async function placeDetails(pid){
+  const fields='name,formatted_phone_number,international_phone_number,website,formatted_address,rating,user_ratings_total,types,url';
+  const r = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${pid}&fields=${fields}&key=${apiKey}`);
+  const d = await r.json();
+  return d.result||{};
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ── RENDER MAIN ───────────────────────────────────────────────────
+function renderMain(){
+  const stats = getStats();
+  const cur = calls[currentIdx];
+  const filtered = getFiltered();
+
+  const html = `
+    <!-- Stats -->
+    <div class="stats-top">
+      <div class="stat-pill"><div class="num">${calls.length}</div><div class="lbl">Total</div></div>
+      <div class="stat-pill"><div class="num num-green">${stats.interested}</div><div class="lbl">Interesados</div></div>
+      <div class="stat-pill"><div class="num num-yellow">${stats.callback}</div><div class="lbl">Rellamar</div></div>
+      <div class="stat-pill"><div class="num num-red">${stats.no}</div><div class="lbl">No</div></div>
+      <div class="stat-pill"><div class="num num-blue">${stats.pending}</div><div class="lbl">Pendientes</div></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-mini">
+      <span>${stats.done}/${calls.length} llamadas</span>
+      <div class="bar"><div class="fill" style="width:${Math.round(stats.done/calls.length*100)}%"></div></div>
+      <span>${Math.round(stats.done/calls.length*100)}%</span>
+    </div>
+
+    <!-- Current call -->
+    <div class="call-panel" id="callPanel">
+      ${cur ? renderCallCard(cur) : '<div style="padding:10px;color:var(--muted);font-size:.85rem">✅ Todos los contactos procesados</div>'}
+    </div>
+
+    <!-- List -->
+    <div class="list-header">
+      <input placeholder="🔍 Filtrar..." oninput="filterQ=this.value;renderList()" value="${filterQ}">
+      <div class="filter-tabs">
+        ${['all','pending','interested','callback','no'].map(t=>`
+          <div class="ftab ${filterTab===t?'on':''}" onclick="filterTab='${t}';renderList()">${
+            t==='all'?'Todos':t==='pending'?'⏳':t==='interested'?'✅':t==='callback'?'🔄':'❌'
+          }</div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="list-scroll" id="listScroll">
+      ${renderListItems(filtered)}
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+      <button onclick="exportCSV()">⬇️ Exportar CSV</button>
+      <button onclick="exportInterested()">⬇️ Solo interesados</button>
+      <button onclick="if(confirm('¿Nueva búsqueda?'))location.reload()">🔄 Nueva búsqueda</button>
+    </div>
+  `;
+  setMain(html);
+}
+
+function renderCallCard(c){
+  const typeLabel = c.types.map(t=>TYPE_MAP[t]).filter(Boolean)[0]||'Negocio';
+  const stars = c.rating ? '⭐'.repeat(Math.round(c.rating)) : '';
+  return `
+    <div class="call-number">#${currentIdx+1} de ${calls.length} · ${typeLabel}</div>
+    <div class="call-name">${esc(c.name)}</div>
+    <div class="call-addr">📍 ${esc(c.address)}</div>
+    ${stars?`<div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">${stars} ${c.rating} (${c.reviews} reseñas)</div>`:''}
+    <div class="call-type-badge">${typeLabel}</div>
+    <div class="call-phone"><a href="tel:${c.phone.replace(/\s/g,'')}">${esc(c.phone)}</a></div>
+    <div class="action-btns">
+      <button class="act-btn act-interested" onclick="mark('interested')">
+        <span class="ico">✅</span>Interesado
+      </button>
+      <button class="act-btn act-callback" onclick="mark('callback')">
+        <span class="ico">🔄</span>Rellamar
+      </button>
+      <button class="act-btn act-no" onclick="mark('no')">
+        <span class="ico">❌</span>No interesa
+      </button>
+      <button class="act-btn act-skip" onclick="mark('skip')">
+        <span class="ico">⏭️</span>Saltar
+      </button>
+    </div>
+    <div class="notes-row">
+      <textarea class="notes-inp" rows="2" placeholder="Notas (nombre del contacto, qué dijo...)"
+        onchange="calls[${currentIdx}].notes=this.value">${esc(c.notes)}</textarea>
+      <a href="${c.mapsUrl||'#'}" target="_blank" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--muted);text-decoration:none;display:flex;align-items:center;font-size:.75rem;white-space:nowrap;transition:all .15s"
+         onmouseover="this.style.color='#a5b4fc'" onmouseout="this.style.color=''">
+        🗺️<br>Maps
+      </a>
+    </div>
+  `;
+}
+
+function renderListItems(list){
+  if(!list.length) return '<div style="text-align:center;color:var(--faint);padding:30px;font-size:.82rem">Sin resultados</div>';
+  return list.map((c,i)=>{
+    const realIdx = calls.indexOf(c);
+    return `
+      <div class="list-item ${realIdx===currentIdx?'active':''}" onclick="jumpTo(${realIdx})">
+        <span class="li-index">${realIdx+1}</span>
+        <span class="li-dot dot-${c.status}"></span>
+        <div class="li-info">
+          <div class="li-name">${esc(c.name)}</div>
+          <div class="li-sub">${esc(c.address)}</div>
+        </div>
+        <span class="li-phone">${esc(c.phone)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderList(){
+  const el = document.getElementById('listScroll');
+  if(el) el.innerHTML = renderListItems(getFiltered());
+  // update call panel if visible
+  const panel = document.getElementById('callPanel');
+  if(panel && calls[currentIdx]){
+    // update active class in list
+    document.querySelectorAll('.list-item').forEach((el,i)=>{
+      el.classList.toggle('active', calls.indexOf(getFiltered()[i])===currentIdx);
+    });
+  }
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────
+function mark(status){
+  if(!calls[currentIdx]) return;
+  calls[currentIdx].status = status;
+  // auto-advance to next pending
+  const nextPending = findNextPending(currentIdx+1);
+  if(nextPending !== -1) currentIdx = nextPending;
+  renderMain();
+  // scroll active into view
+  setTimeout(()=>{
+    const active = document.querySelector('.list-item.active');
+    if(active) active.scrollIntoView({block:'nearest'});
+  }, 50);
+}
+
+function jumpTo(idx){
+  currentIdx = idx;
+  renderMain();
+}
+
+function findNextPending(from){
+  for(let i=from; i<calls.length; i++) if(calls[i].status==='pending') return i;
+  for(let i=0; i<from; i++) if(calls[i].status==='pending') return i;
+  return from < calls.length ? from : calls.length-1;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function getStats(){
+  const s = {pending:0,interested:0,callback:0,no:0,skip:0,done:0};
+  calls.forEach(c=>{ s[c.status]=(s[c.status]||0)+1; });
+  s.done = calls.length - s.pending;
+  return s;
+}
+
+function getFiltered(){
+  return calls.filter(c=>{
+    if(filterTab!=='all' && c.status!==filterTab) return false;
+    if(filterQ){
+      const q = filterQ.toLowerCase();
+      return c.name.toLowerCase().includes(q)||c.address.toLowerCase().includes(q)||c.phone.includes(q);
+    }
+    return true;
+  });
+}
+
+function setMain(html){ document.getElementById('mainPanel').innerHTML = html; }
+function setLoadMsg(m){ const el=document.getElementById('loadMsg'); if(el) el.textContent=m; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── EXPORT ────────────────────────────────────────────────────────
+function exportCSV(list){
+  const data = list || calls;
+  if(!data.length) return alert('No hay resultados');
+  const rows=[['Nombre','Teléfono','Dirección','Tipo','Estado','Notas','Valoración','Google Maps']];
+  data.forEach(c=>{
+    const t = c.types.map(x=>TYPE_MAP[x]).filter(Boolean)[0]||'';
+    rows.push([c.name,c.phone,c.address,t,c.status,c.notes,c.rating||'',c.mapsUrl||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`llamadas_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function exportInterested(){
+  exportCSV(calls.filter(c=>c.status==='interested'));
+}
+</script>
+</body>
+</html>
