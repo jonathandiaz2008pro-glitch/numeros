@@ -1,0 +1,30 @@
+====================================================
+  FINORA - App Android lista para Google Play
+====================================================
+
+PARA VER LA APP EN EL NAVEGADOR:
+  Abre directamente: www/index.html
+
+PARA GENERAR EL APK (instalar en movil):
+  1. Instala JDK 17: https://adoptium.net/
+  2. Instala Android Studio: https://developer.android.com/studio
+     (Durante la instalacion marca Android SDK)
+  3. Haz doble clic en: BUILD_APK.bat
+  4. El APK aparece en: android/app/build/outputs/apk/debug/
+
+PARA INSTALAR EN TU MOVIL:
+  1. Conecta el movil por USB
+  2. Activa Depuracion USB en tu movil
+  3. Haz doble clic en: INSTALAR_EN_MOVIL.bat
+
+PARA SUBIR A GOOGLE PLAY:
+  1. Genera APK de release (firmado):
+     En Android Studio: Build > Generate Signed Bundle/APK
+  2. Crea cuenta de desarrollador Google Play (25$ unico)
+     https://play.google.com/console
+  3. Crea nueva aplicacion y sube el APK/Bundle
+  4. Rellena descripcion, capturas de pantalla y publica
+
+ID de la App: com.finora.app
+Nombre: Finora
+====================================================

@@ -2,741 +2,1007 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Negocios Sin Web — Marcador</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Finora</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://js.puter.com/v2/"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f172a;--s:#1e293b;--b:#334155;
-  --acc:#6366f1;--acc2:#7c3aed;
-  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
-  --text:#f1f5f9;--muted:#94a3b8;--faint:#475569;
+  --bg:#f5f5f7;--surface:#fff;--text:#0a0a0a;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#f3f4f6;--accent:#2563eb;
+  --green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--red-bg:#fef2f2;--amber:#d97706;--amber-bg:#fffbeb;
+  --r:16px;--safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom);
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+html,body{height:100%;overflow:hidden;background:#0a0a0a}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:var(--text)}
 
-/* HEADER */
-header{background:linear-gradient(135deg,#1e3a8a,#4c1d95);padding:18px 24px 16px}
-header h1{font-size:1.25rem;font-weight:800}
-header p{color:#bfdbfe;font-size:.78rem;margin-top:3px}
+/* SPLASH */
+#splash{position:fixed;inset:0;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:9999}
+.splash-logo{width:72px;height:72px;background:#fff;border-radius:20px;display:flex;align-items:center;justify-content:center}
+.splash-name{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px}
+.splash-sub{font-size:13px;color:#6b7280}
+.splash-bar{position:absolute;bottom:calc(48px + var(--safe-bot));left:50%;transform:translateX(-50%);width:40px;height:2px;background:#1f1f1f;border-radius:1px;overflow:hidden}
+.splash-bar::after{content:'';display:block;height:100%;background:#fff;animation:load 1.8s ease forwards}
+@keyframes load{from{width:0}to{width:100%}}
 
-/* SEARCH BAR */
-.search-wrap{padding:16px;background:#0c1425;border-bottom:1px solid var(--b)}
-.search-box{display:flex;gap:8px;max-width:800px;margin:0 auto}
-.search-inp{flex:1;background:var(--s);border:2px solid var(--b);border-radius:12px;padding:14px 18px;color:var(--text);font-size:1rem;transition:border .15s}
-.search-inp:focus{outline:none;border-color:var(--acc)}
-.search-inp::placeholder{color:var(--faint)}
-.search-btn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:12px;padding:14px 22px;cursor:pointer;font-size:.95rem;font-weight:700;transition:all .15s;white-space:nowrap}
-.search-btn:hover{opacity:.9;transform:translateY(-1px)}
-.search-btn:disabled{background:var(--b);color:var(--faint);transform:none;cursor:not-allowed}
+/* AUTH SCREEN */
+#auth-screen{position:fixed;inset:0;background:#0a0a0a;z-index:800;display:none;flex-direction:column;overflow-y:auto}
+#auth-screen.on{display:flex}
+.auth-top{padding:calc(60px + var(--safe-top)) 24px 40px;text-align:center}
+.auth-logo{width:56px;height:56px;background:#fff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.auth-title{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:8px}
+.auth-sub{font-size:14px;color:#6b7280;line-height:1.5}
+.auth-body{background:#fff;border-radius:24px 24px 0 0;flex:1;padding:28px 24px calc(40px + var(--safe-bot))}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#f3f4f6;border-radius:12px;padding:4px;margin-bottom:24px}
+.auth-tab{padding:10px;border-radius:9px;border:none;background:transparent;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s}
+.auth-tab.active{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;font-size:15px;color:var(--text);outline:none;margin-bottom:14px;font-family:inherit;background:#fff;-webkit-appearance:none;transition:border-color .15s}
+.form-input:focus{border-color:#9ca3af}
+.btn-primary{width:100%;background:#0a0a0a;color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px}
+.btn-primary:active{background:#1f1f1f}
+.auth-divider{text-align:center;font-size:12px;color:var(--text3);margin:16px 0}
+.plans-preview{margin-top:20px}
+.plan-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)}
+.plan-row:last-child{border:none}
+.plan-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;min-width:72px;text-align:center}
+.badge-free{background:#f3f4f6;color:#374151}
+.badge-pro{background:#eff6ff;color:#2563eb}
+.badge-fin{background:#0a0a0a;color:#fff}
+.plan-info{flex:1}
+.plan-name{font-size:13px;font-weight:600}
+.plan-desc{font-size:11px;color:var(--text2);margin-top:1px}
+.plan-price{font-size:13px;font-weight:700}
 
-.search-examples{max-width:800px;margin:8px auto 0;display:flex;gap:6px;flex-wrap:wrap}
-.ex{background:var(--bg);border:1px solid var(--b);border-radius:20px;padding:4px 12px;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .15s}
-.ex:hover{border-color:var(--acc);color:#a5b4fc}
+/* APP */
+#app{display:flex;flex-direction:column;height:100%;background:var(--bg);opacity:0;transition:opacity .35s;display:none}
+#app.on{display:flex;opacity:1}
+.status-space{height:var(--safe-top);min-height:44px;background:#0a0a0a;flex-shrink:0}
 
-/* LAYOUT */
-.layout{display:grid;grid-template-columns:1fr 360px;flex:1;overflow:hidden;min-height:0}
-@media(max-width:720px){.layout{grid-template-columns:1fr;overflow:visible}}
+/* TOPBAR */
+.topbar{background:#0a0a0a;padding:4px 20px 20px;flex-shrink:0}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.topbar-greeting{font-size:13px;color:#6b7280}
+.topbar-avatar{width:32px;height:32px;border-radius:50%;background:#1f1f1f;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#d1d5db;border:1px solid #2d2d2d;cursor:pointer}
+.topbar-label{font-size:10px;color:#4b5563;font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.topbar-balance{font-size:40px;font-weight:700;color:#fff;line-height:1;letter-spacing:-1.5px;margin-bottom:6px}
+.topbar-change{font-size:12px;color:var(--green);font-weight:500;display:flex;align-items:center;gap:4px}
+.plan-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;margin-top:8px}
+.chip-free{background:#1a1a1a;color:#9ca3af}
+.chip-pro{background:#1e3a8a;color:#93c5fd}
+.chip-fin{background:#1a0a2e;color:#c4b5fd}
 
-/* LEFT: CALL PANEL */
-.call-area{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b)}
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.scroll::-webkit-scrollbar{display:none}
+.scroll-inner{padding:16px 16px calc(88px + var(--safe-bot))}
 
-.stats-bar{display:flex;border-bottom:1px solid var(--b);flex-shrink:0}
-.sp{flex:1;padding:10px 8px;text-align:center;background:var(--s)}
-.sp .n{font-size:1.2rem;font-weight:800}
-.sp .l{font-size:.62rem;text-transform:uppercase;color:var(--muted);letter-spacing:.3px}
-.ng{color:var(--green)}.ny{color:var(--yellow)}.nr{color:var(--red)}.nb{color:var(--blue)}
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(60px + var(--safe-bot));padding-bottom:var(--safe-bot);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:flex-start;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:10px;border:none;background:none;cursor:pointer;font-family:inherit}
+.nav-btn svg{width:22px;height:22px;stroke:#9ca3af;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+.nb-label{font-size:9.5px;font-weight:500;color:#9ca3af;transition:color .15s}
+.nav-btn.active svg{stroke:var(--text)}
+.nav-btn.active .nb-label{color:var(--text);font-weight:600}
 
-.prog-bar-wrap{background:var(--bg);border-bottom:1px solid var(--b);padding:7px 16px;display:flex;align-items:center;gap:10px;font-size:.72rem;color:var(--muted);flex-shrink:0}
-.prog-track{flex:1;background:var(--b);border-radius:4px;height:5px;overflow:hidden}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:4px;transition:width .3s}
+/* SECTIONS */
+.sec{display:none}.sec.on{display:block}
 
-.cur-call{padding:20px;flex-shrink:0;background:#0c1425;border-bottom:1px solid var(--b)}
-.cc-num{font-size:.7rem;color:var(--muted);margin-bottom:6px}
-.cc-name{font-size:1.35rem;font-weight:800;line-height:1.2}
-.cc-addr{color:var(--muted);font-size:.8rem;margin-top:4px}
-.cc-badge{display:inline-flex;align-items:center;gap:5px;background:#2e1065;color:#a5b4fc;font-size:.7rem;padding:3px 10px;border-radius:20px;margin:8px 0 12px}
-.cc-phone{font-size:2rem;font-weight:900;letter-spacing:1px;margin-bottom:16px}
-.cc-phone a{color:var(--green);text-decoration:none}
-.cc-phone a:hover{text-decoration:underline}
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);margin-bottom:12px;overflow:hidden}
+.card-pad{padding:16px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:600}
+.card-link{font-size:12px;font-weight:500;color:var(--accent)}
 
-.act-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px}
-.a{border:none;border-radius:10px;padding:11px 6px;cursor:pointer;font-size:.73rem;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}
-.a .i{font-size:1.2rem}
-.a:hover{transform:translateY(-2px);filter:brightness(1.1)}
-.a1{background:#065f46;color:#6ee7b7}
-.a2{background:#78350f;color:#fcd34d}
-.a3{background:#7f1d1d;color:#fca5a5}
-.a4{background:var(--s);color:var(--muted);border:1px solid var(--b)}
+/* SECTION HEADER */
+.sec-head{margin-bottom:16px}
+.sec-head h2{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.sec-head p{font-size:13px;color:var(--text2);margin-top:2px}
 
-/* WHATSAPP */
-.wa-box{background:#052e16;border:1px solid #16a34a;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wa-box.confirmed{background:#064e3b;border-color:#10b981}
-.wa-box.no-wa{background:#1c1917;border-color:#44403c;opacity:.6}
-.wa-phone{font-size:1.1rem;font-weight:800;color:#4ade80;flex:1}
-.wa-tag{font-size:.68rem;background:#14532d;color:#86efac;padding:2px 8px;border-radius:20px;font-weight:700}
-.btn-wa{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:5px;text-decoration:none;transition:all .15s;white-space:nowrap}
-.btn-wa:hover{background:#15803d}
-.btn-wa-confirm{background:#064e3b;border:1px solid #10b981;color:#6ee7b7;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.75rem;font-weight:700;transition:all .15s}
-.btn-wa-confirm:hover{background:#065f46}
-.btn-wa-no{background:var(--s);border:1px solid var(--b);color:var(--faint);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.75rem;transition:all .15s}
-.dot-wa{background:#22c55e}
-.wa-badge{font-size:.65rem;background:#14532d;color:#86efac;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:4px}
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:14px}
+.stat-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:8px}
+.stat-value{font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.stat-change{font-size:11px;font-weight:500;margin-top:5px}
+.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--amber)}
 
-.notes-row{display:flex;gap:7px;margin-top:10px}
-.notes-inp{flex:1;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 11px;color:var(--text);font-size:.8rem;resize:none}
-.notes-inp:focus{outline:none;border-color:var(--acc)}
-.maps-link{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 10px;color:var(--muted);text-decoration:none;font-size:.7rem;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s;white-space:nowrap}
-.maps-link:hover{border-color:var(--acc);color:#a5b4fc}
+/* ALERT */
+.alert{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;margin-bottom:12px;border:1px solid}
+.alert-warn{background:var(--amber-bg);border-color:#fde68a}
+.alert-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fef3c7}
+.alert-icon svg{width:18px;height:18px;stroke:#d97706;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.alert-text{flex:1}
+.alert-text strong{font-size:13px;font-weight:600;display:block}
+.alert-text span{font-size:11px;color:var(--text2)}
+.alert-action{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;flex-shrink:0}
 
-/* RIGHT: LIST */
-.list-area{display:flex;flex-direction:column;overflow:hidden}
-.list-top{padding:10px 12px;border-bottom:1px solid var(--b);background:var(--s);display:flex;flex-direction:column;gap:7px;flex-shrink:0}
-.list-search{background:var(--bg);border:1px solid var(--b);border-radius:7px;padding:7px 10px;color:var(--text);font-size:.78rem;width:100%}
-.list-search:focus{outline:none;border-color:var(--acc)}
-.tabs{display:flex;gap:4px;flex-wrap:wrap}
-.tab{background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:4px 9px;font-size:.7rem;cursor:pointer;color:var(--muted);transition:all .15s}
-.tab.on{background:#312e81;border-color:var(--acc);color:#a5b4fc;font-weight:700}
+/* AI WIDGET */
+.ai-widget{background:#0a0a0a;border-radius:var(--r);padding:16px;margin-bottom:12px}
+.ai-widget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ai-badge{display:flex;align-items:center;gap:6px}
+.ai-dot{width:6px;height:6px;background:#10b981;border-radius:50%;animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-badge span{font-size:12px;font-weight:600;color:#fff}
+.ai-limit-tag{font-size:10px;color:#6b7280;background:#1a1a1a;padding:3px 8px;border-radius:6px}
+.ai-message{background:#141414;border-radius:10px;padding:12px;font-size:13px;color:#d1d5db;line-height:1.6;margin-bottom:12px}
+.ai-message strong{color:#fff}
+.ai-input-row{display:flex;gap:8px}
+.ai-input{flex:1;background:#141414;border:1px solid #2d2d2d;border-radius:10px;padding:10px 14px;font-size:13px;color:#fff;outline:none;font-family:inherit}
+.ai-input::placeholder{color:#4b5563}
+.ai-send{background:#fff;color:#0a0a0a;border:none;border-radius:10px;width:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ai-send svg{width:16px;height:16px;stroke:#0a0a0a;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-.list-scroll{flex:1;overflow-y:auto;padding:8px}
-.list-scroll::-webkit-scrollbar{width:3px}
-.list-scroll::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 150px)}
+.chat-header{background:var(--surface);padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.chat-header-left h2{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.chat-header-left p{font-size:12px;color:var(--text2);margin-top:2px}
+.ai-counter{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+.counter-ok{background:var(--green-bg);color:var(--green)}
+.counter-low{background:var(--amber-bg);color:var(--amber)}
+.counter-out{background:var(--red-bg);color:var(--red)}
+.chat-suggestions{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch}
+.chat-suggestions::-webkit-scrollbar{display:none}
+.sugg-chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--text);font-family:inherit;font-weight:500;flex-shrink:0}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.chat-msgs::-webkit-scrollbar{display:none}
+.bubble{padding:11px 14px;border-radius:16px;font-size:13px;line-height:1.6;max-width:84%}
+.bubble.ai{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:4px 16px 16px 16px;align-self:flex-start}
+.bubble.user{background:#0a0a0a;color:#fff;border-radius:16px 16px 4px 16px;align-self:flex-end}
+.chat-bar{padding:10px 14px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;padding-bottom:calc(10px + var(--safe-bot))}
+.chat-bar-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;font-size:14px;color:var(--text);outline:none;font-family:inherit}
+.chat-bar-input:focus{border-color:#9ca3af}
+.chat-bar-send{background:#0a0a0a;color:#fff;border:none;border-radius:50%;width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.chat-bar-send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-.li{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:all .12s}
-.li:hover{background:var(--s);border-color:var(--b)}
-.li.cur{background:#1e1b4b;border-color:var(--acc)}
-.li-n{font-size:.66rem;color:var(--faint);min-width:20px;text-align:right}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.dp{background:var(--b)}.di{background:var(--green)}.dc{background:var(--yellow)}.dn{background:var(--red)}.ds{background:var(--faint)}
-.li-info{flex:1;min-width:0}
-.li-nm{font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.li-ad{font-size:.68rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.li-ph{font-size:.68rem;color:var(--green);flex-shrink:0}
+/* TX */
+.tx-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border2)}
+.tx-item:last-child{border:none}
+.tx-icon{width:38px;height:38px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tx-icon svg{width:18px;height:18px;stroke:#6b7280;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tx-icon.income{background:var(--green-bg)}.tx-icon.income svg{stroke:var(--green)}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-cat{font-size:11px;color:var(--text2);margin-top:1px}
+.tx-amount{font-size:14px;font-weight:600;flex-shrink:0}
 
-.bottom-bar{padding:8px 12px;border-top:1px solid var(--b);background:var(--s);display:flex;gap:6px;flex-shrink:0}
-.bb-btn{background:var(--bg);border:1px solid var(--b);color:var(--muted);border-radius:7px;padding:6px 10px;font-size:.7rem;cursor:pointer;transition:all .15s}
-.bb-btn:hover{border-color:var(--acc);color:#a5b4fc}
+/* FISCAL */
+.deadline-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border2)}
+.deadline-item:last-child{border:none}
+.deadline-badge{font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;flex-shrink:0;min-width:60px;text-align:center}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.deadline-info{flex:1}
+.deadline-name{font-size:13px;font-weight:500}
+.deadline-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.deadline-amount{font-size:14px;font-weight:600;flex-shrink:0}
+.deducible-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border2)}
+.deducible-row:last-child{border:none}
+.deducible-name{flex:1;font-size:13px}
+.deducible-pct{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px}
+.pct-full{background:var(--green-bg);color:var(--green)}.pct-half{background:var(--amber-bg);color:var(--amber)}
 
-/* CENTER/LOADING */
-.center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--faint);text-align:center;padding:40px;grid-column:1/-1}
-.center .ico{font-size:3.5rem}
-.center p{font-size:.88rem;line-height:1.8;max-width:340px;color:var(--muted)}
-.center strong{color:var(--text)}
-.spinner{width:36px;height:36px;border:3px solid var(--b);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-step{font-size:.82rem;color:var(--muted);margin-top:4px}
-.load-detail{font-size:.72rem;color:var(--faint)}
+/* PROG */
+.prog-bar{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin:8px 0 3px}
+.prog-fill{height:100%;border-radius:2px}
+.goal-item{margin-bottom:16px}.goal-item:last-child{margin:0}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.goal-name{font-size:13px;font-weight:500}
+.goal-pct{font-size:11px;font-weight:600;color:var(--accent)}
+.goal-sub{font-size:11px;color:var(--text2)}
 
-/* RADIUS HINT */
-.radius-chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
-.rc2{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:3px 9px;font-size:.7rem;cursor:pointer;color:var(--muted);transition:all .15s}
-.rc2.on{border-color:var(--acc);color:#a5b4fc;background:#1e1b4b}
+/* PLANES */
+.plan-card{border-radius:var(--r);border:2px solid var(--border);padding:16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;position:relative}
+.plan-card.selected{border-color:#0a0a0a}
+.plan-card.featured{border-color:var(--accent);background:#f8faff}
+.plan-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.plan-card-name{font-size:15px;font-weight:700}
+.plan-card-price{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.plan-card-price span{font-size:12px;font-weight:500;color:var(--text2)}
+.plan-card-desc{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5}
+.plan-feature{font-size:12px;color:var(--text2);padding:2px 0;display:flex;align-items:center;gap:6px}
+.plan-feature::before{content:'✓';color:var(--green);font-weight:700;font-size:11px}
+.plan-popular{position:absolute;top:-1px;right:16px;background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:0 0 8px 8px;letter-spacing:.5px;text-transform:uppercase}
+
+/* UPGRADE MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end}
+.modal.on{display:flex}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:20px 20px calc(24px + var(--safe-bot));max-height:92vh;overflow-y:auto}
+.sheet-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 20px}
+.sheet-title{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.sheet-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:16px;background:var(--bg);border-radius:12px;padding:4px}
+.type-btn{padding:10px;border-radius:9px;border:none;background:transparent;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;color:var(--text2)}
+.type-btn.active{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.btn-save{width:100%;background:#0a0a0a;color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-outline{width:100%;background:transparent;color:var(--text);border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:10px}
+
+/* PROFILE SCREEN */
+#sec-perfil .profile-avatar{width:64px;height:64px;border-radius:50%;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin:0 auto 12px}
+.profile-name{font-size:20px;font-weight:700;text-align:center;letter-spacing:-.3px}
+.profile-email{font-size:13px;color:var(--text2);text-align:center;margin-top:4px;margin-bottom:20px}
+
+/* EDUCATION */
+.edu-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border2);cursor:pointer}
+.edu-item:last-child{border:none}
+.edu-ico-wrap{width:38px;height:38px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.edu-ico-wrap svg{width:18px;height:18px;stroke:#6b7280;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.edu-info{flex:1}
+.edu-title{font-size:13px;font-weight:500}
+.edu-meta{display:flex;gap:6px;align-items:center;margin-top:3px}
+.edu-time{font-size:11px;color:var(--text2)}
+.edu-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.3px}
+.chip-basic{background:var(--green-bg);color:var(--green)}.chip-mid{background:#eff6ff;color:var(--accent)}
+.divider-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px}
+
+/* FAB */
+.fab{position:fixed;bottom:calc(74px + var(--safe-bot));right:16px;width:50px;height:50px;background:#0a0a0a;border-radius:14px;display:none;align-items:center;justify-content:center;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99}
+.fab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(78px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(12px);background:#0a0a0a;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* TYPING */
+.typing-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#d1d5db;animation:td .9s infinite;margin:0 2px}
+.typing-dot:nth-child(2){animation-delay:.15s}.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes td{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>📞 Negocios Sin Web — Marcador de Llamadas</h1>
-  <p>Gratis · Sin registro · Datos de OpenStreetMap · Escribe la zona y listo</p>
-</header>
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">
+    <svg width="40" height="40" viewBox="0 0 40 40"><text x="4" y="33" font-size="34" font-weight="800" fill="#0a0a0a" font-family="-apple-system,sans-serif">F</text></svg>
+  </div>
+  <div class="splash-name">Finora</div>
+  <div class="splash-sub">Tu asesor financiero con IA</div>
+  <div class="splash-bar"></div>
+</div>
 
-<div class="search-wrap">
-  <div class="search-box">
-    <input class="search-inp" id="q" placeholder="Ej: restaurantes en Malasaña Madrid · peluquerías Gracia Barcelona · bares Triana Sevilla"
-      onkeydown="if(event.key==='Enter')buscar()">
-    <button class="search-btn" id="btn" onclick="buscar()">🔍 Buscar</button>
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-top">
+    <div class="auth-logo">
+      <svg width="32" height="32" viewBox="0 0 40 40"><text x="4" y="33" font-size="34" font-weight="800" fill="#0a0a0a" font-family="-apple-system,sans-serif">F</text></svg>
+    </div>
+    <div class="auth-title">Finora</div>
+    <div class="auth-sub">Asesor financiero personal con IA para España</div>
   </div>
-  <div class="search-examples">
-    <span style="font-size:.7rem;color:var(--faint);align-self:center">Ejemplos:</span>
-    <div class="ex" onclick="setQ('restaurantes en Malasaña Madrid')">🍽️ Restaurantes Malasaña</div>
-    <div class="ex" onclick="setQ('peluquerías en Gracia Barcelona')">✂️ Peluquerías Gracia BCN</div>
-    <div class="ex" onclick="setQ('bares en Triana Sevilla')">🍺 Bares Triana Sevilla</div>
-    <div class="ex" onclick="setQ('talleres en Vallecas Madrid')">🚗 Talleres Vallecas</div>
-    <div class="ex" onclick="setQ('gimnasios en Valencia centro')">💪 Gimnasios Valencia</div>
-    <div class="ex" onclick="setQ('cafeterías en el Born Barcelona')">☕ Cafeterías El Born</div>
-    <div class="ex" onclick="setQ('hoteles en Palma de Mallorca')">🏨 Hoteles Palma</div>
-    <div class="ex" onclick="setQ('restaurantes en el Eixample Barcelona')">🍽️ Eixample Barcelona</div>
-    <div class="ex" onclick="setQ('bares en Chueca Madrid')">🍺 Chueca Madrid</div>
-    <div class="ex" onclick="setQ('peluquerías en Nervión Sevilla')">✂️ Nervión Sevilla</div>
-    <div class="ex" onclick="setQ('talleres en Cornellà Barcelona')">🚗 Cornellà BCN</div>
-    <div class="ex" onclick="setQ('restaurantes en Salamanca Madrid')">🍽️ Salamanca Madrid</div>
-    <div class="ex" onclick="setQ('cafeterías en Bilbao centro')">☕ Bilbao centro</div>
-    <div class="ex" onclick="setQ('peluquerías en Zaragoza centro')">✂️ Zaragoza centro</div>
-    <div class="ex" onclick="setQ('bares en el Cabanyal Valencia')">🍺 Cabanyal Valencia</div>
-    <div class="ex" onclick="setQ('restaurantes en Málaga centro')">🍽️ Málaga centro</div>
-    <div class="ex" onclick="setQ('talleres en Getafe Madrid')">🚗 Getafe Madrid</div>
-    <div class="ex" onclick="setQ('gimnasios en Murcia centro')">💪 Murcia centro</div>
-    <div class="ex" onclick="setQ('dentistas en Alicante centro')">🦷 Dentistas Alicante</div>
-    <div class="ex" onclick="setQ('panaderías en Lavapiés Madrid')">🥐 Lavapiés Madrid</div>
-  </div>
-  <div class="radius-chips" style="max-width:800px;margin:8px auto 0">
-    <span style="font-size:.7rem;color:var(--faint);align-self:center">Radio:</span>
-    <div class="rc2" id="r300" onclick="setR(300)">300m</div>
-    <div class="rc2" id="r500" onclick="setR(500)">500m</div>
-    <div class="rc2 on" id="r1000" onclick="setR(1000)">1 km</div>
-    <div class="rc2" id="r2000" onclick="setR(2000)">2 km</div>
-    <div class="rc2" id="r5000" onclick="setR(5000)">5 km</div>
-    <div class="rc2" id="r10000" onclick="setR(10000)">10 km</div>
-    <div class="rc2" id="r25000" onclick="setR(25000)">25 km</div>
-    <div class="rc2" id="r50000" onclick="setR(50000)">50 km</div>
+  <div class="auth-body">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="switchTab('register')">Crear cuenta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <label class="form-label">Correo electrónico</label>
+      <input class="form-input" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="••••••••">
+      <button class="btn-primary" onclick="doLogin()">Entrar</button>
+      <div class="auth-divider">¿No tienes cuenta? <span style="color:var(--accent);cursor:pointer" onclick="switchTab('register')">Regístrate gratis</span></div>
+
+      <div class="plans-preview">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Planes disponibles</div>
+        <div class="plan-row">
+          <div class="plan-badge badge-free">Free</div>
+          <div class="plan-info"><div class="plan-name">Básico</div><div class="plan-desc">5 preguntas IA/día</div></div>
+          <div class="plan-price">Gratis</div>
+        </div>
+        <div class="plan-row">
+          <div class="plan-badge badge-pro">Pro</div>
+          <div class="plan-info"><div class="plan-name">Pro</div><div class="plan-desc">30 preguntas IA/día + informes</div></div>
+          <div class="plan-price">9 €/mes</div>
+        </div>
+        <div class="plan-row">
+          <div class="plan-badge badge-fin">Financiero</div>
+          <div class="plan-info"><div class="plan-name">Financiero</div><div class="plan-desc">IA ilimitada + asesor dedicado</div></div>
+          <div class="plan-price">19 €/mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="tab-register" style="display:none">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="reg-name" placeholder="Tu nombre" autocomplete="given-name">
+      <label class="form-label">Correo electrónico</label>
+      <input class="form-input" id="reg-email" type="email" placeholder="tu@email.com" autocomplete="email">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="reg-pass" type="password" placeholder="Mínimo 6 caracteres">
+      <label class="form-label">¿Cuál es tu situación?</label>
+      <div class="type-toggle">
+        <button class="type-btn active" id="mode-autonomo" onclick="setMode('autonomo')">Autónomo</button>
+        <button class="type-btn" id="mode-empleado" onclick="setMode('empleado')">Empleado</button>
+        <button class="type-btn" id="mode-pareja" onclick="setMode('pareja')">Pareja</button>
+      </div>
+      <label class="form-label">Ingresos mensuales (€)</label>
+      <input class="form-input" id="reg-income" type="number" inputmode="numeric" placeholder="Ej: 2500">
+      <label class="form-label">Gastos mensuales (€)</label>
+      <input class="form-input" id="reg-expenses" type="number" inputmode="numeric" placeholder="Ej: 1500">
+      <button class="btn-primary" onclick="doRegister()">Crear cuenta gratis</button>
+      <div class="auth-divider">¿Ya tienes cuenta? <span style="color:var(--accent);cursor:pointer" onclick="switchTab('login')">Inicia sesión</span></div>
+    </div>
   </div>
 </div>
 
-<div class="layout" id="layout">
-  <div class="center" id="emptyState">
-    <div class="ico">📞</div>
-    <p>
-      <strong>Escribe qué buscas y dónde.</strong><br><br>
-      Detecta automáticamente el tipo de negocio. Solo necesitas escribir algo como:<br>
-      <em>"restaurantes en Malasaña"</em> o <em>"peluquerías Gracia Barcelona"</em>
-    </p>
+<!-- APP -->
+<div id="app">
+  <div class="status-space"></div>
+  <div class="topbar" id="main-topbar">
+    <div class="topbar-row">
+      <div class="topbar-greeting" id="tb-greeting">Buenas tardes</div>
+      <div class="topbar-avatar" id="tb-avatar" onclick="goTo('perfil')">--</div>
+    </div>
+    <div class="topbar-label">BENEFICIO NETO · <span id="tb-month"></span></div>
+    <div class="topbar-balance" id="tb-balance">0 €</div>
+    <div class="topbar-change" id="tb-change">Tasa de ahorro: 0%</div>
+    <div class="plan-chip chip-free" id="tb-plan-chip">Plan Gratuito · 5 preguntas/día</div>
+  </div>
+
+  <div class="scroll" id="main-scroll">
+    <div class="scroll-inner">
+
+      <!-- INICIO -->
+      <div class="sec on" id="sec-inicio">
+        <div class="stat-grid" id="stat-grid-inicio">
+          <div class="stat-card"><div class="stat-label">Ingresos este mes</div><div class="stat-value pos" id="st-income">0 €</div></div>
+          <div class="stat-card"><div class="stat-label">Gastos este mes</div><div class="stat-value" id="st-expenses">0 €</div></div>
+          <div class="stat-card"><div class="stat-label">Beneficio neto</div><div class="stat-value" id="st-benefit">0 €</div></div>
+          <div class="stat-card"><div class="stat-label">Tasa de ahorro</div><div class="stat-value pos" id="st-savrate">0%</div></div>
+        </div>
+
+        <div class="ai-widget">
+          <div class="ai-widget-header">
+            <div class="ai-badge"><div class="ai-dot"></div><span>Finora IA</span></div>
+            <div class="ai-limit-tag" id="home-ai-tag">5 preguntas hoy</div>
+          </div>
+          <div class="ai-message" id="home-ai-bubble">Cargando tu resumen financiero...</div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="home-inp" placeholder="Pregunta algo rápido..." onkeydown="if(event.key==='Enter')sendHomeMsg()">
+            <button class="ai-send" onclick="sendHomeMsg()"><svg viewBox="0 0 16 16"><path d="M14 8H2M14 8l-5-5M14 8l-5 5"/></svg></button>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="card-head"><div class="card-title">Movimientos recientes</div><span class="card-link" onclick="goTo('finanzas')">Ver todos</span></div>
+          <div id="tx-list-home"><div style="font-size:13px;color:var(--text2);text-align:center;padding:16px 0">Aún no hay movimientos.<br>Añade el primero en Finanzas.</div></div>
+        </div>
+      </div>
+
+      <!-- ASESOR IA -->
+      <div class="sec" id="sec-asesor" style="padding:0;margin:-16px">
+        <div class="chat-wrap">
+          <div class="chat-header">
+            <div class="chat-header-left"><h2>Asesor IA</h2><p>Pregúntame lo que quieras sobre finanzas</p></div>
+            <div class="ai-counter counter-ok" id="ai-counter-badge">5 restantes</div>
+          </div>
+          <div class="chat-suggestions">
+            <button class="sugg-chip" onclick="askAI(this.textContent)">¿Cómo mejorar mi ahorro?</button>
+            <button class="sugg-chip" onclick="askAI(this.textContent)">¿Qué gastos deduzco?</button>
+            <button class="sugg-chip" onclick="askAI(this.textContent)">¿Cómo funciona el IVA?</button>
+            <button class="sugg-chip" onclick="askAI(this.textContent)">Plan de pensiones</button>
+            <button class="sugg-chip" onclick="askAI(this.textContent)">Fondos indexados</button>
+          </div>
+          <div class="chat-msgs" id="chat-msgs">
+            <div class="bubble ai" id="chat-welcome">Hola, soy Finora. Puedo ayudarte con cualquier duda sobre tus finanzas, fiscalidad española, ahorro e inversión. ¿En qué te puedo ayudar?</div>
+          </div>
+          <div class="chat-bar">
+            <input class="chat-bar-input" id="chat-inp" placeholder="Pregunta lo que quieras..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="chat-bar-send" onclick="sendChat()"><svg viewBox="0 0 16 16"><path d="M14 8H2M14 8l-5-5M14 8l-5 5"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FISCAL -->
+      <div class="sec" id="sec-fiscal">
+        <div class="sec-head"><h2>Centro Fiscal</h2><p id="fiscal-sub">Impuestos sin sorpresas</p></div>
+        <div id="fiscal-autonomo">
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-label">IVA Q2 estimado</div><div class="stat-value neg" id="iva-estimate">—</div><div class="stat-change warn">Vence 20 julio</div></div>
+            <div class="stat-card"><div class="stat-label">IRPF estimado</div><div class="stat-value" id="irpf-estimate">—</div></div>
+            <div class="stat-card"><div class="stat-label">Facturación anual</div><div class="stat-value" id="facturacion">—</div></div>
+            <div class="stat-card"><div class="stat-label">Ahorro fiscal est.</div><div class="stat-value pos" id="ahorro-fiscal">—</div></div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-head"><div class="card-title">Gastos deducibles</div></div>
+            <div class="deducible-row"><div class="deducible-name">Cuota autónomos (SS)</div><span class="deducible-pct pct-full">100%</span></div>
+            <div class="deducible-row"><div class="deducible-name">Software y suscripciones</div><span class="deducible-pct pct-full">100%</span></div>
+            <div class="deducible-row"><div class="deducible-name">Gestoría y asesoría</div><span class="deducible-pct pct-full">100%</span></div>
+            <div class="deducible-row"><div class="deducible-name">Teléfono e internet</div><span class="deducible-pct pct-half">50%</span></div>
+            <div class="deducible-row"><div class="deducible-name">Vehículo (uso mixto)</div><span class="deducible-pct pct-half">50%</span></div>
+            <div class="deducible-row"><div class="deducible-name">Material de oficina</div><span class="deducible-pct pct-full">100%</span></div>
+            <div style="padding-top:12px;font-size:11px;color:var(--text2)">Información orientativa. Consulta con tu asesor fiscal.</div>
+          </div>
+        </div>
+        <div id="fiscal-empleado" style="display:none">
+          <div class="card card-pad">
+            <div class="card-head"><div class="card-title">Declaración de la Renta</div></div>
+            <div class="stat-grid" style="margin:0">
+              <div class="stat-card"><div class="stat-label">IRPF estimado</div><div class="stat-value" id="irpf-emp">—</div></div>
+              <div class="stat-card"><div class="stat-label">Retenciones</div><div class="stat-value pos">En nómina</div></div>
+            </div>
+            <div style="margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6">Como empleado, tu empresa retiene el IRPF cada mes. La declaración de la Renta (Modelo 100) se presenta entre abril y junio del año siguiente.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANZAS -->
+      <div class="sec" id="sec-finanzas">
+        <div class="sec-head"><h2>Mis Finanzas</h2><p>Control de tus movimientos</p></div>
+        <div class="card card-pad" id="tx-card">
+          <div class="card-head"><div class="card-title">Movimientos</div></div>
+          <div id="tx-list"><div style="font-size:13px;color:var(--text2);text-align:center;padding:20px 0">Aún no hay movimientos.</div></div>
+        </div>
+      </div>
+
+      <!-- PLANES -->
+      <div class="sec" id="sec-planes">
+        <div class="sec-head"><h2>Planes</h2><p>Elige el que mejor se adapta a ti</p></div>
+
+        <div class="plan-card" id="plan-free" onclick="selectPlan('free')">
+          <div class="plan-card-header">
+            <div><div class="plan-badge badge-free" style="display:inline-block;margin-bottom:6px">Free</div><div class="plan-card-name">Básico</div></div>
+            <div class="plan-card-price">0 €<span>/mes</span></div>
+          </div>
+          <div class="plan-card-desc">Para empezar a controlar tus finanzas.</div>
+          <div class="plan-feature">5 preguntas al asesor IA por día</div>
+          <div class="plan-feature">Registro de ingresos y gastos</div>
+          <div class="plan-feature">Resumen financiero básico</div>
+        </div>
+
+        <div class="plan-card featured" id="plan-pro" onclick="selectPlan('pro')">
+          <div class="plan-popular">Más popular</div>
+          <div class="plan-card-header">
+            <div><div class="plan-badge badge-pro" style="display:inline-block;margin-bottom:6px">Pro</div><div class="plan-card-name">Pro</div></div>
+            <div class="plan-card-price">9 €<span>/mes</span></div>
+          </div>
+          <div class="plan-card-desc">Para autónomos y profesionales que quieren más control.</div>
+          <div class="plan-feature">30 preguntas al asesor IA por día</div>
+          <div class="plan-feature">Todo lo del plan Básico</div>
+          <div class="plan-feature">Centro fiscal con alertas de IVA/IRPF</div>
+          <div class="plan-feature">Exportar informes en PDF</div>
+        </div>
+
+        <div class="plan-card" id="plan-financiero" onclick="selectPlan('financiero')">
+          <div class="plan-card-header">
+            <div><div class="plan-badge badge-fin" style="display:inline-block;margin-bottom:6px">Financiero</div><div class="plan-card-name">Financiero</div></div>
+            <div class="plan-card-price">19 €<span>/mes</span></div>
+          </div>
+          <div class="plan-card-desc">Para quienes quieren asesoría financiera completa.</div>
+          <div class="plan-feature">IA ilimitada sin restricciones</div>
+          <div class="plan-feature">Todo lo del plan Pro</div>
+          <div class="plan-feature">Análisis de inversiones</div>
+          <div class="plan-feature">Asesor humano disponible</div>
+        </div>
+      </div>
+
+      <!-- EDUCACIÓN -->
+      <div class="sec" id="sec-edu">
+        <div class="sec-head"><h2>Aprender</h2><p>Educación financiera en sencillo</p></div>
+        <div class="divider-label">Para autónomos</div>
+        <div class="card">
+          <div class="edu-item" onclick="askAI('Explícame qué gastos puede deducir un autónomo')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><rect x="3" y="2" width="12" height="14" rx="2"/><path d="M6 6h6M6 9h6M6 12h4"/></svg></div><div class="edu-info"><div class="edu-title">¿Qué gastos puede deducir un autónomo?</div><div class="edu-meta"><span class="edu-time">5 min</span><span class="edu-chip chip-basic">Básico</span></div></div></div>
+          <div class="edu-item" onclick="askAI('Explícame cómo funciona el IVA para autónomos en España')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><path d="M9 2L2 5v6c0 3.5 3 6 7 7 4-1 7-3.5 7-7V5L9 2z"/></svg></div><div class="edu-info"><div class="edu-title">Guía completa del IVA para autónomos</div><div class="edu-meta"><span class="edu-time">8 min</span><span class="edu-chip chip-basic">Básico</span></div></div></div>
+          <div class="edu-item" onclick="askAI('Explícame el Modelo 303 paso a paso')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><rect x="3" y="2" width="12" height="14" rx="2"/><path d="M6 6h6M6 9h6M6 12h4"/></svg></div><div class="edu-info"><div class="edu-title">Modelo 303: paso a paso</div><div class="edu-meta"><span class="edu-time">10 min</span><span class="edu-chip chip-mid">Intermedio</span></div></div></div>
+        </div>
+        <div class="divider-label">Ahorro e inversión</div>
+        <div class="card">
+          <div class="edu-item" onclick="askAI('Explícame la regla del 50-30-20 para el presupuesto personal')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l3 3"/></svg></div><div class="edu-info"><div class="edu-title">La regla del 50-30-20</div><div class="edu-meta"><span class="edu-time">4 min</span><span class="edu-chip chip-basic">Básico</span></div></div></div>
+          <div class="edu-item" onclick="askAI('¿Cuánto dinero debería tener en un fondo de emergencia?')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><path d="M9 2L2 5v6c0 3.5 3 6 7 7 4-1 7-3.5 7-7V5L9 2z"/></svg></div><div class="edu-info"><div class="edu-title">Fondo de emergencia: cuánto necesitas</div><div class="edu-meta"><span class="edu-time">5 min</span><span class="edu-chip chip-basic">Básico</span></div></div></div>
+          <div class="edu-item" onclick="askAI('Explícame qué son los fondos indexados y cómo empezar a invertir')"><div class="edu-ico-wrap"><svg viewBox="0 0 18 18"><path d="M3 15l4-4 3 3 5-6"/><path d="M2 2h14v14"/></svg></div><div class="edu-info"><div class="edu-title">Fondos indexados: guía para principiantes</div><div class="edu-meta"><span class="edu-time">9 min</span><span class="edu-chip chip-mid">Intermedio</span></div></div></div>
+        </div>
+      </div>
+
+      <!-- PERFIL -->
+      <div class="sec" id="sec-perfil">
+        <div class="sec-head"><h2>Mi perfil</h2></div>
+        <div class="card card-pad" style="text-align:center;margin-bottom:12px">
+          <div class="profile-avatar" id="prof-avatar">--</div>
+          <div class="profile-name" id="prof-name">-</div>
+          <div class="profile-email" id="prof-email">-</div>
+          <div class="plan-chip" id="prof-plan-chip" style="display:inline-flex;margin:0 auto">Plan Gratuito</div>
+        </div>
+        <div class="card" style="margin-bottom:12px" onclick="goTo('planes')">
+          <div style="padding:16px;display:flex;align-items:center;gap:12px">
+            <div style="flex:1"><div style="font-size:14px;font-weight:600">Mejorar plan</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Pro desde 9 €/mes · IA ilimitada</div></div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border2)">
+            <div style="flex:1"><div style="font-size:14px;font-weight:500">Ingresos mensuales</div></div>
+            <div style="font-size:14px;font-weight:600" id="prof-income">—</div>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border2)">
+            <div style="flex:1"><div style="font-size:14px;font-weight:500">Gastos mensuales</div></div>
+            <div style="font-size:14px;font-weight:600" id="prof-expenses">—</div>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <div style="flex:1"><div style="font-size:14px;font-weight:500">Situación</div></div>
+            <div style="font-size:14px;font-weight:600" id="prof-mode">—</div>
+          </div>
+        </div>
+        <button class="btn-outline" style="margin-top:12px" onclick="doLogout()">Cerrar sesión</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goTo('inicio',this)">
+      <svg viewBox="0 0 22 22"><path d="M3 9.5L11 3l8 6.5V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M8 20v-8h6v8"/></svg>
+      <span class="nb-label">Inicio</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('asesor',this)">
+      <svg viewBox="0 0 22 22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="nb-label">IA</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('fiscal',this)">
+      <svg viewBox="0 0 22 22"><rect x="3" y="4" width="16" height="16" rx="2"/><path d="M7 8h8M7 12h8M7 16h5"/></svg>
+      <span class="nb-label">Fiscal</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('finanzas',this)">
+      <svg viewBox="0 0 22 22"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="nb-label">Finanzas</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('edu',this)">
+      <svg viewBox="0 0 22 22"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span class="nb-label">Aprender</span>
+    </button>
+  </nav>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openAddModal()">
+  <svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>
+</button>
+
+<!-- ADD MODAL -->
+<div class="modal" id="add-modal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Añadir movimiento</div>
+    <div class="type-toggle" style="grid-template-columns:1fr 1fr">
+      <button class="type-btn" id="btn-gasto" onclick="setTxType('gasto')">Gasto</button>
+      <button class="type-btn active" id="btn-ingreso" onclick="setTxType('ingreso')">Ingreso</button>
+    </div>
+    <label class="form-label">Cantidad (€)</label>
+    <input class="form-input" id="inp-amount" type="number" inputmode="decimal" placeholder="0,00">
+    <label class="form-label">Descripción</label>
+    <input class="form-input" id="inp-desc" placeholder="¿De qué es?">
+    <label class="form-label">Categoría</label>
+    <select class="form-input" id="inp-cat">
+      <option>Servicios profesionales</option><option>Alimentación</option><option>Transporte</option>
+      <option>Software</option><option>Salud</option><option>Ocio</option>
+      <option>Formación</option><option>Gestoría</option><option>Otros</option>
+    </select>
+    <button class="btn-save" onclick="saveTransaction()">Guardar</button>
   </div>
 </div>
+
+<!-- UPGRADE MODAL -->
+<div class="modal" id="upgrade-modal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Límite alcanzado</div>
+    <div class="sheet-sub">Has usado todas tus preguntas de IA hoy. Mejora tu plan para seguir.</div>
+    <div class="plan-card featured" style="margin-bottom:10px">
+      <div class="plan-popular">Más popular</div>
+      <div class="plan-card-header"><div><div class="plan-badge badge-pro" style="display:inline-block;margin-bottom:4px">Pro</div><div class="plan-card-name">Pro</div></div><div class="plan-card-price">9 €<span>/mes</span></div></div>
+      <div class="plan-feature">30 preguntas al día</div>
+      <div class="plan-feature">Centro fiscal completo</div>
+      <div class="plan-feature">Exportar PDF</div>
+    </div>
+    <div class="plan-card" style="margin-bottom:16px">
+      <div class="plan-card-header"><div><div class="plan-badge badge-fin" style="display:inline-block;margin-bottom:4px">Financiero</div><div class="plan-card-name">Financiero</div></div><div class="plan-card-price">19 €<span>/mes</span></div></div>
+      <div class="plan-feature">IA ilimitada</div>
+      <div class="plan-feature">Asesor humano</div>
+    </div>
+    <button class="btn-save" onclick="showToast('Próximamente disponible');document.getElementById('upgrade-modal').classList.remove('on')">Mejorar plan</button>
+    <button class="btn-outline" onclick="document.getElementById('upgrade-modal').classList.remove('on')">Ahora no</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ── CATEGORÍAS ─────────────────────────────────────────────────────
-// Mapeo de palabras → tags de OpenStreetMap
-const CAT_MAP = [
-  {words:['restaurant','restaurante','restaurantes','comida','gastronom'],  tags:[{k:'amenity',v:'restaurant'}], label:'Restaurante'},
-  {words:['bar','bares','taberna','taverna','pub','pubs','cervecería','cerveceria'], tags:[{k:'amenity',v:'bar'},{k:'amenity',v:'pub'}], label:'Bar/Pub'},
-  {words:['café','cafe','cafetería','cafeteria','cafeterías','cafeterias','coffee'], tags:[{k:'amenity',v:'cafe'}], label:'Cafetería'},
-  {words:['hotel','hoteles','hostal','hostales','pensión','pension','alojamiento','hospedaje'], tags:[{k:'tourism',v:'hotel'},{k:'tourism',v:'hostel'},{k:'tourism',v:'guest_house'}], label:'Hotel'},
-  {words:['peluquería','peluqueria','peluquerías','peluquerias','barbería','barberia','barbero','barbería'], tags:[{k:'shop',v:'hairdresser'},{k:'shop',v:'barber'}], label:'Peluquería'},
-  {words:['gimnasio','gimnasios','gym','gyms','fitness','crossfit'], tags:[{k:'leisure',v:'fitness_centre'},{k:'amenity',v:'gym'}], label:'Gimnasio'},
-  {words:['estética','estetica','esteticas','estetique','belleza','spa','uñas','unas','manicura'], tags:[{k:'shop',v:'beauty'}], label:'Estética'},
-  {words:['taller','talleres','mecánico','mecanico','mecánicos','mecanicos','coches','automovil'], tags:[{k:'shop',v:'car_repair'}], label:'Taller mecánico'},
-  {words:['dentista','dentistas','dental','odontolog'], tags:[{k:'amenity',v:'dentist'}], label:'Dentista'},
-  {words:['farmacia','farmacias','parafarmacia'], tags:[{k:'amenity',v:'pharmacy'}], label:'Farmacia'},
-  {words:['lavandería','lavanderia','lavanderías','lavanderias','tintorería','tintoreria'], tags:[{k:'shop',v:'laundry'},{k:'shop',v:'dry_cleaning'}], label:'Lavandería'},
-  {words:['panadería','panaderia','panaderías','panaderias','panadero','bakery','horno'], tags:[{k:'shop',v:'bakery'}], label:'Panadería'},
-  {words:['supermercado','supermercados','super','alimentación','alimentacion','frutería','fruteria','verdulería'], tags:[{k:'shop',v:'supermarket'},{k:'shop',v:'greengrocer'},{k:'shop',v:'convenience'}], label:'Alimentación'},
-  {words:['ropa','ropas','moda','boutique','tienda ropa','tiendas ropa','textil'], tags:[{k:'shop',v:'clothes'}], label:'Tienda de ropa'},
-  {words:['electricist','electricista','electricistas','eléctric','electric'], tags:[{k:'craft',v:'electrician'}], label:'Electricista'},
-  {words:['fontanero','fontaneros','plomero','plomeros','fontanería','fontaneria'], tags:[{k:'craft',v:'plumber'}], label:'Fontanero'},
-  {words:['pizzería','pizzeria','pizza','pizzas'], tags:[{k:'amenity',v:'fast_food'},{k:'amenity',v:'restaurant'}], label:'Pizzería'},
-  {words:['veterinario','veterinaria','veterinarios','vet','clínica veterinaria'], tags:[{k:'amenity',v:'veterinary'}], label:'Veterinario'},
-  {words:['clínica','clinica','médico','medico','médicos','consulta'], tags:[{k:'amenity',v:'clinic'},{k:'amenity',v:'doctors'}], label:'Clínica/Médico'},
-  {words:['joyería','joyeria','joyerías','joyerias','relojería','relojeria'], tags:[{k:'shop',v:'jewelry'}], label:'Joyería'},
-  {words:['librería','libreria','librerias','papelería','papeleria'], tags:[{k:'shop',v:'books'},{k:'shop',v:'stationery'}], label:'Librería'},
-  {words:['farmacia veterinaria'], tags:[{k:'shop',v:'agrarian'}], label:'Tienda agrícola'},
-  {words:['negocio','negocios','empresa','empresas','comercio','comercios','local','locales','tienda','tiendas'], tags:[{k:'shop',v:'convenience'}], label:'Comercio'},
-];
+// ─── DATOS ───────────────────────────────────────────────
+const PLANS = {
+  free:       { name:'Plan Gratuito', limit:5,  chipClass:'chip-free' },
+  pro:        { name:'Plan Pro',      limit:30, chipClass:'chip-pro' },
+  financiero: { name:'Financiero',    limit:999,chipClass:'chip-fin' }
+}
 
-// Fallback: si no detecta categoría, usa esto
-const DEFAULT_TAGS = [{k:'amenity',v:'restaurant'}];
-const DEFAULT_LABEL = 'Negocio';
+let user = null
+let transactions = []
+let txType = 'ingreso'
+let regMode = 'autonomo'
 
-// Todos los tipos de negocio para modo general
-const ALL_BUSINESS_TAGS = [
-  {k:'amenity',v:'restaurant'},{k:'amenity',v:'cafe'},{k:'amenity',v:'bar'},
-  {k:'amenity',v:'pub'},{k:'amenity',v:'fast_food'},{k:'amenity',v:'dentist'},
-  {k:'amenity',v:'pharmacy'},{k:'amenity',v:'clinic'},{k:'amenity',v:'doctors'},
-  {k:'amenity',v:'veterinary'},{k:'amenity',v:'gym'},
-  {k:'tourism',v:'hotel'},{k:'tourism',v:'hostel'},{k:'tourism',v:'guest_house'},
-  {k:'shop',v:'hairdresser'},{k:'shop',v:'barber'},{k:'shop',v:'beauty'},
-  {k:'shop',v:'car_repair'},{k:'shop',v:'laundry'},{k:'shop',v:'bakery'},
-  {k:'shop',v:'clothes'},{k:'shop',v:'supermarket'},{k:'shop',v:'convenience'},
-  {k:'shop',v:'jewelry'},{k:'shop',v:'optician'},{k:'shop',v:'florist'},
-  {k:'leisure',v:'fitness_centre'},{k:'craft',v:'electrician'},{k:'craft',v:'plumber'},
-];
+function loadUser(){
+  const u = localStorage.getItem('finora_user')
+  if(u) user = JSON.parse(u)
+  const tx = localStorage.getItem('finora_tx')
+  if(tx) transactions = JSON.parse(tx)
+}
 
-function getTypeLabel(t){
-  const map = {
-    restaurant:'Restaurante',cafe:'Cafetería',bar:'Bar',pub:'Bar/Pub',
-    fast_food:'Comida rápida',dentist:'Dentista',pharmacy:'Farmacia',
-    clinic:'Clínica',doctors:'Médico',veterinary:'Veterinario',gym:'Gimnasio',
-    hotel:'Hotel',hostel:'Hostal',guest_house:'Pensión',
-    hairdresser:'Peluquería',barber:'Barbería',beauty:'Estética',
-    car_repair:'Taller',laundry:'Lavandería',bakery:'Panadería',
-    clothes:'Tienda ropa',supermarket:'Supermercado',convenience:'Tienda',
-    jewelry:'Joyería',optician:'Óptica',florist:'Floristería',
-    fitness_centre:'Gimnasio',electrician:'Electricista',plumber:'Fontanero',
-  };
-  for(const [k,v] of Object.entries(t||{})){
-    if(map[v]) return map[v];
+function saveUser(){ localStorage.setItem('finora_user', JSON.stringify(user)) }
+function saveTx(){ localStorage.setItem('finora_tx', JSON.stringify(transactions)) }
+
+// ─── AI LIMIT ────────────────────────────────────────────
+function getTodayKey(){ return 'ai_' + new Date().toISOString().slice(0,10) }
+
+function getAiUsed(){
+  return parseInt(localStorage.getItem(getTodayKey()) || '0')
+}
+
+function incrementAiUsed(){
+  const k = getTodayKey()
+  localStorage.setItem(k, (getAiUsed() + 1).toString())
+}
+
+function getAiLimit(){
+  if(!user) return 5
+  return PLANS[user.plan || 'free'].limit
+}
+
+function getAiRemaining(){
+  return Math.max(0, getAiLimit() - getAiUsed())
+}
+
+function updateAiCounter(){
+  const rem = getAiRemaining()
+  const lim = getAiLimit()
+  const badge = document.getElementById('ai-counter-badge')
+  const homeTag = document.getElementById('home-ai-tag')
+  if(badge){
+    badge.textContent = lim >= 999 ? 'Ilimitado' : `${rem} restantes`
+    badge.className = 'ai-counter ' + (rem > 3 ? 'counter-ok' : rem > 0 ? 'counter-low' : 'counter-out')
   }
-  return 'Negocio';
+  if(homeTag) homeTag.textContent = lim >= 999 ? 'IA ilimitada' : `${rem} preguntas hoy`
 }
 
-// ── ESTADO ─────────────────────────────────────────────────────────
-let calls = [];
-let curIdx = 0;
-let ftab = 'all';
-let fq = '';
-let soloTelef = true;
-let ftabWa = false;
-let searchRadius = 1000;
+// ─── AUTH ─────────────────────────────────────────────────
+let authTab = 'login'
 
-// ── UI HELPERS ─────────────────────────────────────────────────────
-function setQ(v){ document.getElementById('q').value=v; }
-function setR(v){
-  searchRadius=v;
-  ['300','500','1000','2000','5000','10000','25000','50000'].forEach(r=>{
-    const el=document.getElementById('r'+r);
-    if(el) el.classList.toggle('on', parseInt(r)===v);
-  });
+function switchTab(tab){
+  authTab = tab
+  document.getElementById('tab-login').style.display = tab==='login' ? 'block' : 'none'
+  document.getElementById('tab-register').style.display = tab==='register' ? 'block' : 'none'
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>{
+    b.className = 'auth-tab' + ((i===0&&tab==='login')||(i===1&&tab==='register')?' active':'')
+  })
 }
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-// ── DETECCIÓN DE CATEGORÍA ─────────────────────────────────────────
-function detectCat(text){
-  const t = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  for(const cat of CAT_MAP){
-    for(const w of cat.words){
-      const wn = w.normalize('NFD').replace(/[̀-ͯ]/g,'');
-      if(t.includes(wn)) return cat;
-    }
+function setMode(m){
+  regMode = m
+  ;['autonomo','empleado','pareja'].forEach(id=>{
+    document.getElementById('mode-'+id).className = 'type-btn'+(id===m?' active':'')
+  })
+}
+
+function doLogin(){
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  if(!email || !pass){ showToast('Rellena todos los campos'); return }
+
+  const stored = localStorage.getItem('finora_user')
+  if(!stored){ showToast('No existe esa cuenta. Regístrate primero.'); return }
+  const u = JSON.parse(stored)
+  if(u.email !== email){ showToast('Email incorrecto'); return }
+  if(u.password !== btoa(pass)){ showToast('Contraseña incorrecta'); return }
+
+  user = u
+  enterApp()
+}
+
+function doRegister(){
+  const name     = document.getElementById('reg-name').value.trim()
+  const email    = document.getElementById('reg-email').value.trim()
+  const pass     = document.getElementById('reg-pass').value
+  const income   = parseFloat(document.getElementById('reg-income').value) || 0
+  const expenses = parseFloat(document.getElementById('reg-expenses').value) || 0
+
+  if(!name || !email || !pass){ showToast('Rellena todos los campos'); return }
+  if(pass.length < 6){ showToast('La contraseña debe tener mínimo 6 caracteres'); return }
+  if(!income){ showToast('Indica tus ingresos aproximados'); return }
+
+  user = { name, email, password: btoa(pass), mode: regMode, income, expenses, plan: 'free', createdAt: Date.now() }
+  saveUser()
+  enterApp()
+}
+
+function doLogout(){
+  user = null
+  transactions = []
+  chatHistory.length = 0
+  document.getElementById('app').classList.remove('on')
+  document.getElementById('app').style.display = 'none'
+  document.getElementById('auth-screen').classList.add('on')
+  switchTab('login')
+}
+
+function enterApp(){
+  saveUser()
+  document.getElementById('auth-screen').classList.remove('on')
+  document.getElementById('app').style.display = 'flex'
+  setTimeout(()=>document.getElementById('app').classList.add('on'), 50)
+  initDashboard()
+  updateAiCounter()
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────
+function initDashboard(){
+  const now = new Date()
+  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+  document.getElementById('tb-month').textContent = months[now.getMonth()].toUpperCase()+' '+now.getFullYear()
+
+  const hour = now.getHours()
+  const gr = hour<12?'Buenos días':hour<18?'Buenas tardes':'Buenas noches'
+  document.getElementById('tb-greeting').textContent = gr + ', ' + user.name.split(' ')[0]
+
+  const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+  document.getElementById('tb-avatar').textContent = initials
+  document.getElementById('prof-avatar').textContent = initials
+  document.getElementById('prof-name').textContent = user.name
+  document.getElementById('prof-email').textContent = user.email
+  document.getElementById('prof-income').textContent = user.income.toLocaleString('es-ES') + ' €'
+  document.getElementById('prof-expenses').textContent = user.expenses.toLocaleString('es-ES') + ' €'
+  document.getElementById('prof-mode').textContent = {autonomo:'Autónomo',empleado:'Empleado',pareja:'Pareja'}[user.mode]||user.mode
+
+  const benefit = user.income - user.expenses
+  const savRate = user.income > 0 ? Math.round((benefit/user.income)*100) : 0
+
+  document.getElementById('tb-balance').textContent = benefit.toLocaleString('es-ES') + ' €'
+  document.getElementById('tb-change').innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3 6M6 3L9 6" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Tasa de ahorro: ${savRate}%`
+
+  const plan = user.plan || 'free'
+  const planInfo = PLANS[plan]
+  const chipEl = document.getElementById('tb-plan-chip')
+  chipEl.textContent = planInfo.name + (plan==='free' ? ' · 5 preguntas/día' : plan==='pro' ? ' · 30 preguntas/día' : ' · IA ilimitada')
+  chipEl.className = 'plan-chip ' + planInfo.chipClass
+  document.getElementById('prof-plan-chip').textContent = planInfo.name
+  document.getElementById('prof-plan-chip').className = 'plan-chip ' + planInfo.chipClass
+
+  document.getElementById('st-income').textContent = user.income.toLocaleString('es-ES') + ' €'
+  document.getElementById('st-expenses').textContent = user.expenses.toLocaleString('es-ES') + ' €'
+  document.getElementById('st-benefit').textContent = benefit.toLocaleString('es-ES') + ' €'
+  document.getElementById('st-savrate').textContent = savRate + '%'
+
+  document.getElementById('home-ai-bubble').innerHTML = `Hola <strong>${user.name.split(' ')[0]}</strong>. Con ingresos de <strong>${user.income.toLocaleString('es-ES')} €/mes</strong> y gastos de <strong>${user.expenses.toLocaleString('es-ES')} €/mes</strong>, tu beneficio neto es <strong>${benefit.toLocaleString('es-ES')} €/mes</strong>.<br><br>Puedes preguntarme cualquier cosa sobre tus finanzas.`
+
+  // Fiscal
+  if(user.mode === 'autonomo'){
+    document.getElementById('fiscal-autonomo').style.display = 'block'
+    document.getElementById('fiscal-empleado').style.display = 'none'
+    const iva = Math.round(user.income * 3 * 0.21)
+    const irpf = Math.round(user.income * 12 * 0.2)
+    document.getElementById('iva-estimate').textContent = iva.toLocaleString('es-ES') + ' €'
+    document.getElementById('irpf-estimate').textContent = irpf.toLocaleString('es-ES') + ' €'
+    document.getElementById('facturacion').textContent = (user.income * 12).toLocaleString('es-ES') + ' €'
+    document.getElementById('ahorro-fiscal').textContent = Math.round(irpf * 0.15).toLocaleString('es-ES') + ' €'
+  } else {
+    document.getElementById('fiscal-autonomo').style.display = 'none'
+    document.getElementById('fiscal-empleado').style.display = 'block'
+    document.getElementById('irpf-emp').textContent = Math.round(user.income * 12 * 0.15).toLocaleString('es-ES') + ' €'
   }
-  return null;
+
+  renderTxList()
+  // Reset chat welcome
+  document.getElementById('chat-msgs').innerHTML = `<div class="bubble ai">Hola <strong>${user.name.split(' ')[0]}</strong>. Soy tu asesor financiero Finora.<br><br>Sé que tienes ingresos de <strong>${user.income.toLocaleString('es-ES')} €/mes</strong> y gastos de <strong>${user.expenses.toLocaleString('es-ES')} €/mes</strong>. ¿En qué te puedo ayudar?</div>`
+  chatHistory.length = 0
 }
 
-// ── BÚSQUEDA ──────────────────────────────────────────────────────
-async function buscar(){
-  const raw = document.getElementById('q').value.trim();
-  if(!raw) return alert('Escribe qué buscas y dónde. Ej: "restaurantes en Malasaña Madrid"');
+function renderTxList(){
+  const listHome = document.getElementById('tx-list-home')
+  const listFin  = document.getElementById('tx-list')
+  const svgIn = `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="14" height="11" rx="2"/><path d="M5 8h5M5 11h3"/></svg>`
+  const svgOut = `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h12M5 3h8"/><rect x="2" y="6" width="14" height="10" rx="1.5"/></svg>`
 
-  const btn = document.getElementById('btn');
-  btn.disabled=true; btn.textContent='⏳ Buscando...';
+  if(!transactions.length){
+    listHome.innerHTML = `<div style="font-size:13px;color:var(--text2);text-align:center;padding:16px 0">Aún no hay movimientos.</div>`
+    listFin.innerHTML  = `<div style="font-size:13px;color:var(--text2);text-align:center;padding:20px 0">Añade tu primer movimiento con el botón +</div>`
+    return
+  }
 
-  setLayout(`
-    <div class="center">
-      <div class="spinner"></div>
-      <div class="load-step" id="ls">Analizando búsqueda...</div>
-      <div class="load-detail" id="ld"></div>
-    </div>
-  `);
+  const html = [...transactions].reverse().map(t=>`
+    <div class="tx-item">
+      <div class="tx-icon ${t.type}">${t.type==='ingreso'?svgIn:svgOut}</div>
+      <div class="tx-info"><div class="tx-name">${t.desc}</div><div class="tx-cat">${t.cat} · ${t.date}</div></div>
+      <div class="tx-amount ${t.type==='ingreso'?'pos':'neg'}">${t.type==='ingreso'?'+':'−'}${parseFloat(t.amount).toLocaleString('es-ES')} €</div>
+    </div>`).join('')
 
-  try {
-    // 1. Geocodificar primero
-    const zoneText = limpiarZona(raw);
-    setLS(`📍 Localizando "${zoneText}"...`);
-    setLD('');
-    const coords = await geocodeNominatim(zoneText);
-    setLS(`📍 ${coords.display} · Iniciando búsqueda...`);
+  listHome.innerHTML = html.split('</div>\n    </div>').slice(0,4).join('</div>\n    </div>') + '</div>\n    </div>'
+  listFin.innerHTML  = html
+}
 
-    // 2. Detectar categoría
-    const cat = detectCat(raw);
-    const tags = cat ? cat.tags : ALL_BUSINESS_TAGS;
-    const label = cat ? cat.label : 'todos los negocios';
+// ─── NAV ──────────────────────────────────────────────────
+const SECS = ['inicio','asesor','fiscal','finanzas','edu','perfil','planes']
 
-    // 3. Lanzar búsquedas en paralelo con radios escalonados si hay pocos resultados
-    let allPlaces = [];
-    const radii = searchRadius <= 2000
-      ? [searchRadius, searchRadius*2, searchRadius*4]   // escala automática si radio pequeño
-      : [searchRadius];
+function goTo(id, btn){
+  SECS.forEach(s=>document.getElementById('sec-'+s).classList.remove('on'))
+  document.getElementById('sec-'+id).classList.add('on')
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'))
+  if(btn) btn.classList.add('active')
+  document.getElementById('main-topbar').style.display = ['asesor'].includes(id)?'none':'block'
+  document.getElementById('fab').style.display = id==='finanzas'?'flex':'none'
+  document.getElementById('main-scroll').scrollTo(0,0)
+  if(id==='asesor') setTimeout(()=>document.getElementById('chat-inp').focus(),100)
+  updateAiCounter()
+}
 
-    for(const r of radii){
-      setLS(`🔍 Buscando ${label} sin web con teléfono... (radio ${r>=1000?r/1000+'km':r+'m'})`);
-      setLD('Filtrando directamente en OpenStreetMap: con teléfono + sin web');
-      const batch = await overpassQueryFiltered(coords.lat, coords.lon, tags, r);
-      // deduplicar
-      const seen = new Set(allPlaces.map(p=>`${p.type}/${p.id}`));
-      for(const p of batch) if(!seen.has(`${p.type}/${p.id}`)) allPlaces.push(p);
-      setLD(`${allPlaces.length} encontrados hasta ahora...`);
-      if(allPlaces.length >= 80) break; // suficientes, no seguimos expandiendo
-      if(r < radii[radii.length-1]) await sleep(500);
-    }
+// ─── AI ──────────────────────────────────────────────────
+const chatHistory = []
 
-    setLS(`✅ Procesando ${allPlaces.length} resultados...`);
+function buildSystemPrompt(){
+  if(!user) return 'Eres Finora, un asesor financiero personal para España.'
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.toLocaleDateString('es-ES',{month:'long'})
+  const benefit = user.income - user.expenses
+  const savRate = user.income>0 ? Math.round((benefit/user.income)*100) : 0
+  const modeStr = {autonomo:'autónomo/a',empleado:'empleado/a por cuenta ajena',pareja:'en pareja'}[user.mode]||user.mode
 
-    // 4. Convertir a objetos de llamada
-    calls = [];
-    const sinTelef = [];
-    for(const p of allPlaces){
-      const t = p.tags||{};
-      const name = t.name||t['name:es']||''; if(!name) continue;
-      const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||t['contact:mobile']||t['phone:mobile']||'');
-      const waRaw = t['contact:whatsapp']||t['whatsapp']||'';
-      const waPhone = normalizePhone(waRaw) || (phone ? phone : ''); // si tiene wa:tag úsalo, si no usa el teléfono para verificar
-      const hasWaTag = !!waRaw; // confirmado por OSM
-      const addr = buildAddr(t);
-      const typeLabel = getTypeLabel(t);
-      const mapsUrl = `https://www.openstreetmap.org/${p.type}/${p.id}`;
-      const obj = {id:`${p.type}/${p.id}`, name, phone, waPhone, hasWaTag, address:addr, typeLabel, mapsUrl, status:'pending', waStatus:'unknown', notes:''};
-      if(phone) calls.push(obj);
-      else sinTelef.push(obj);
-    }
-    calls = [...calls, ...sinTelef];
+  return `Eres Finora, un asesor financiero personal con IA especializado en España. Eres experto en fiscalidad española, ahorro, inversión y planificación financiera.
 
-    if(!calls.length){
-      setLayout(`
-        <div class="center">
-          <div class="ico">😔</div>
-          <p>No se encontraron <strong>${label}</strong> sin web en esta zona.<br><br>
-          Prueba con un <strong>radio mayor</strong> o una zona diferente.<br>
-          También puedes probar sin especificar categoría: solo escribe la zona.</p>
-        </div>
-      `);
-      return;
-    }
+Fecha actual: ${month} de ${year}. Año fiscal: ${year}.
 
-    ftab='all'; fq=''; soloTelef=true;
-    curIdx = calls.findIndex(c=>c.phone);
-    if(curIdx<0) curIdx=0;
-    renderAll();
+Perfil del usuario:
+- Nombre: ${user.name}
+- Situación laboral: ${modeStr}
+- Ingresos mensuales: ${user.income.toLocaleString('es-ES')} euros/mes
+- Gastos mensuales: ${user.expenses.toLocaleString('es-ES')} euros/mes
+- Beneficio neto: ${benefit.toLocaleString('es-ES')} euros/mes
+- Tasa de ahorro: ${savRate}%
 
+Responde siempre en español, de forma clara, directa y personalizada para este usuario. Máximo 5 líneas salvo que pidan más detalle. Para consejos fiscales añade: "Consulta con tu gestor fiscal antes de aplicarlo."`
+}
+
+async function callAI(msg){
+  chatHistory.push({ role:'user', content:msg })
+  const messages = [{ role:'system', content:buildSystemPrompt() }, ...chatHistory.slice(-10)]
+  const response = await puter.ai.chat(messages, { model:'gpt-4o-mini' })
+  const text = response?.message?.content || response?.text || String(response)
+  chatHistory.push({ role:'assistant', content:text })
+  return text
+}
+
+function appendBubble(container, role, text){
+  const d = document.createElement('div')
+  d.className = 'bubble '+role
+  d.innerHTML = text.replace(/\n/g,'<br>')
+  container.appendChild(d)
+  container.scrollTop = container.scrollHeight
+  return d
+}
+
+async function sendChat(){
+  const inp = document.getElementById('chat-inp')
+  const val = inp.value.trim()
+  if(!val) return
+
+  if(getAiRemaining() <= 0){
+    document.getElementById('upgrade-modal').classList.add('on')
+    return
+  }
+
+  inp.value = ''
+  inp.disabled = true
+  const msgs = document.getElementById('chat-msgs')
+  appendBubble(msgs,'user',val)
+
+  const typing = document.createElement('div')
+  typing.className = 'bubble ai'
+  typing.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>'
+  msgs.appendChild(typing)
+  msgs.scrollTop = msgs.scrollHeight
+
+  try{
+    incrementAiUsed()
+    updateAiCounter()
+    const reply = await callAI(val)
+    typing.remove()
+    appendBubble(msgs,'ai',reply)
   } catch(e){
-    setLayout(`
-      <div class="center">
-        <div class="ico">❌</div>
-        <p><strong>Error:</strong> ${esc(e.message)}<br><br>
-        Comprueba que la zona exista. Ej: "restaurantes en Malasaña Madrid"</p>
-      </div>
-    `);
-  } finally {
-    btn.disabled=false; btn.textContent='🔍 Buscar';
+    typing.innerHTML = 'No se pudo conectar. Comprueba tu conexión.'
   }
+  inp.disabled = false
+  inp.focus()
 }
 
-function limpiarZona(text){
-  // Quitar palabras de categoría para quedarnos con la ubicación
-  let z = text;
-  // Quitar palabras de categoría conocidas
-  const catWords = CAT_MAP.flatMap(c=>c.words).sort((a,b)=>b.length-a.length);
-  for(const w of catWords){
-    const re = new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'s?\\b','gi');
-    z = z.replace(re,'');
-  }
-  // Quitar preposiciones sueltas al principio
-  z = z.replace(/^\s*(en|de|del|la|las|los|el|a|cerca de|por)\s+/i,'').trim();
-  z = z.replace(/\s{2,}/g,' ').trim();
-  if(z.length < 3) z = text; // fallback
-  return z + ' España';
+function askAI(q){
+  goTo('asesor', document.querySelectorAll('.nav-btn')[1])
+  setTimeout(()=>{ document.getElementById('chat-inp').value = q; sendChat() }, 200)
 }
 
-// ── GEOCODING — 3 servicios con fallback automático ──────────────
-async function geocodeNominatim(q){
-  // Quitar "España" si ya lo añadimos, para que Open-Meteo no se confunda
-  const qClean = q.replace(/\s*españa\s*$/i,'').trim();
+function sendHomeMsg(){
+  const inp = document.getElementById('home-inp')
+  const val = inp.value.trim()
+  if(!val) return
+  inp.value = ''
+  askAI(val)
+}
 
-  // 1) Open-Meteo Geocoding (sin key, CORS perfecto)
-  try {
-    const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(qClean)}&count=10&language=es&format=json`;
-    const r=await fetch(url);
-    if(r.ok){
-      const d=await r.json();
-      const results=(d.results||[]);
-      // Filtrar España (country_code ES) y ordenar
-      const es=results.filter(x=>x.country_code==='ES');
-      const hit=es[0]||results[0];
-      if(hit) return {lat:hit.latitude, lon:hit.longitude, display:`${hit.name}, ${hit.admin1||hit.country||''}`};
+// ─── TRANSACTIONS ─────────────────────────────────────────
+function openAddModal(){
+  document.getElementById('add-modal').classList.add('on')
+  setTxType('gasto')
+  document.getElementById('inp-amount').value = ''
+  document.getElementById('inp-desc').value = ''
+  setTimeout(()=>document.getElementById('inp-amount').focus(), 100)
+}
+function closeAddModal(){ document.getElementById('add-modal').classList.remove('on') }
+
+function setTxType(t){
+  txType = t
+  document.getElementById('btn-gasto').className = 'type-btn'+(t==='gasto'?' active':'')
+  document.getElementById('btn-ingreso').className = 'type-btn'+(t==='ingreso'?' active':'')
+}
+
+function saveTransaction(){
+  const amount = parseFloat(document.getElementById('inp-amount').value)
+  const desc   = document.getElementById('inp-desc').value.trim() || 'Sin descripción'
+  const cat    = document.getElementById('inp-cat').value
+  if(!amount || amount <= 0){ showToast('Introduce una cantidad válida'); return }
+
+  const today = new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short'})
+  transactions.push({ type:txType, amount, desc, cat, date:today, id:Date.now() })
+  saveTx()
+  closeAddModal()
+  renderTxList()
+  showToast('Movimiento guardado')
+}
+
+// ─── PLANES ──────────────────────────────────────────────
+function selectPlan(p){
+  if(p === 'free'){ showToast('Ya estás en el plan gratuito'); return }
+  showToast('Próximamente: pago con Stripe')
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+let toastTimer
+function showToast(msg){
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('on')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 2500)
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+loadUser()
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{})
+
+setTimeout(()=>{
+  const s = document.getElementById('splash')
+  s.style.transition = 'opacity .4s'
+  s.style.opacity = '0'
+  setTimeout(()=>{
+    s.style.display = 'none'
+    if(user){
+      document.getElementById('app').style.display = 'flex'
+      setTimeout(()=>document.getElementById('app').classList.add('on'), 50)
+      initDashboard()
+      updateAiCounter()
+    } else {
+      document.getElementById('auth-screen').classList.add('on')
     }
-  }catch(e){}
-
-  // 2) Photon (Komoot)
-  try{
-    const url=`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=es`;
-    const r=await fetch(url);
-    if(r.ok){
-      const d=await r.json();
-      const feats=(d.features||[]).sort((a,b)=>{
-        const aEs=(a.properties?.country||'').toLowerCase().includes('spa')?-1:1;
-        const bEs=(b.properties?.country||'').toLowerCase().includes('spa')?-1:1;
-        return aEs-bEs;
-      });
-      if(feats.length){
-        const f=feats[0]; const p=f.properties||{};
-        return {lat:f.geometry.coordinates[1], lon:f.geometry.coordinates[0],
-                display:[p.name,p.city||p.town,p.state].filter(Boolean).join(', ')};
-      }
-    }
-  }catch(e){}
-
-  // 3) Nominatim (último recurso)
-  try{
-    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=es&accept-language=es`;
-    const r=await fetch(url,{headers:{'Accept':'application/json'}});
-    if(r.ok){
-      const d=await r.json();
-      if(d.length) return {lat:parseFloat(d[0].lat), lon:parseFloat(d[0].lon),
-                           display:d[0].display_name.split(',').slice(0,2).join(',')};
-    }
-  }catch(e){}
-
-  throw new Error(`No encontré la zona "${qClean}". Prueba siendo más específico: "Gran Vía Madrid" o "barrio Gracia Barcelona".`);
-}
-
-// ── OVERPASS API (gratis, sin key, varios servidores) ────────────
-const OVERPASS_SERVERS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
-
-async function fetchWithTimeout(url, options, ms=8000){
-  const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), ms);
-  try{
-    const r = await fetch(url, {...options, signal: ctrl.signal});
-    clearTimeout(timer);
-    return r;
-  }catch(e){
-    clearTimeout(timer);
-    throw e;
-  }
-}
-
-// Versión filtrada: pide SOLO los que tienen teléfono Y no tienen web
-// Mucho más eficiente — menos datos, más resultados útiles
-async function overpassQueryFiltered(lat, lon, tags, radius){
-  const around=`(around:${radius},${lat},${lon})`;
-
-  // Construimos dos bloques:
-  // A) con "phone" + sin "website"
-  // B) con "contact:phone" + sin "website"
-  let partsPhone=[], partsContactPhone=[];
-  for(const tag of tags){
-    const base = `["${tag.k}"="${tag.v}"]${around}`;
-    partsPhone.push(`node${base}["phone"]["website"!~"."]["contact:website"!~"."];`);
-    partsPhone.push(`way${base}["phone"]["website"!~"."]["contact:website"!~"."];`);
-    partsContactPhone.push(`node${base}["contact:phone"]["website"!~"."]["contact:website"!~"."];`);
-    partsContactPhone.push(`way${base}["contact:phone"]["website"!~"."]["contact:website"!~"."];`);
-  }
-
-  const allParts = [...partsPhone, ...partsContactPhone];
-  const q=`[out:json][timeout:20];(${allParts.join('')});out center 500;`;
-  const body='data='+encodeURIComponent(q);
-
-  for(let i=0; i<OVERPASS_SERVERS.length; i++){
-    const server=OVERPASS_SERVERS[i];
-    setLD(`Servidor ${i+1}/${OVERPASS_SERVERS.length}...`);
-    try{
-      const r=await fetchWithTimeout(server,{
-        method:'POST', body,
-        headers:{'Content-Type':'application/x-www-form-urlencoded'}
-      }, 15000);
-      if(!r.ok) continue;
-      const d=await r.json();
-      return d.elements||[];
-    }catch(e){ /* prueba siguiente */ }
-  }
-  throw new Error('Los servidores de OpenStreetMap no responden. Inténtalo en unos segundos.');
-}
-
-// Versión sin filtro (fallback)
-async function overpassQuery(lat, lon, tags, radius){
-  const around=`(around:${radius},${lat},${lon})`;
-  let parts=[];
-  for(const tag of tags){
-    parts.push(`node["${tag.k}"="${tag.v}"]${around};`);
-    parts.push(`way["${tag.k}"="${tag.v}"]${around};`);
-  }
-  const q=`[out:json][timeout:20];(${parts.join('')});out center 500;`;
-  const body='data='+encodeURIComponent(q);
-  for(let i=0; i<OVERPASS_SERVERS.length; i++){
-    try{
-      const r=await fetchWithTimeout(OVERPASS_SERVERS[i],{method:'POST',body,headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000);
-      if(!r.ok) continue;
-      const d=await r.json();
-      return d.elements||[];
-    }catch(e){}
-  }
-  throw new Error('Los servidores de OpenStreetMap no responden.');
-}
-
-// ── HELPERS DE DATOS ───────────────────────────────────────────────
-function normalizePhone(p){
-  if(!p) return '';
-  p = p.trim().replace(/\s+/g,' ');
-  // Eliminar números claramente inválidos
-  if(p.replace(/\D/g,'').length < 7) return '';
-  return p;
-}
-
-function buildAddr(t){
-  const parts=[];
-  if(t['addr:street']){
-    let line=t['addr:street'];
-    if(t['addr:housenumber']) line+=' '+t['addr:housenumber'];
-    parts.push(line);
-  }
-  if(t['addr:city']||t['addr:town']||t['addr:village'])
-    parts.push(t['addr:city']||t['addr:town']||t['addr:village']);
-  if(t['addr:postcode']) parts.push(t['addr:postcode']);
-  return parts.join(', ') || '';
-}
-
-// ── RENDER ────────────────────────────────────────────────────────
-function renderAll(){
-  const stats=getStats();
-  const cur=calls[curIdx];
-  const filtered=getFiltered();
-
-  const html=`
-    <div class="call-area">
-      <div class="stats-bar">
-        <div class="sp"><div class="n">${calls.filter(c=>c.phone).length}</div><div class="l">📞 Con tel.</div></div>
-        <div class="sp"><div class="n ng">${stats.interested}</div><div class="l">Interesados</div></div>
-        <div class="sp"><div class="n ny">${stats.callback}</div><div class="l">Rellamar</div></div>
-        <div class="sp"><div class="n nr">${stats.no}</div><div class="l">No interesa</div></div>
-        <div class="sp"><div class="n nb">${stats.pending}</div><div class="l">Pendientes</div></div>
-      </div>
-      <div class="prog-bar-wrap">
-        <span>${stats.done}/${calls.length}</span>
-        <div class="prog-track"><div class="prog-fill" style="width:${calls.length?Math.round(stats.done/calls.length*100):0}%"></div></div>
-        <span>${calls.length?Math.round(stats.done/calls.length*100):0}%</span>
-      </div>
-      <div class="cur-call">
-        ${cur ? callCard(cur) : '<div style="padding:10px;color:var(--muted);font-size:.85rem">✅ Todos procesados</div>'}
-      </div>
-    </div>
-    <div class="list-area">
-      <div class="list-top">
-        <input class="list-search" placeholder="🔍 Filtrar por nombre o teléfono..." oninput="fq=this.value;renderList()" value="${esc(fq)}">
-        <div class="tabs">
-          <div class="tab ${soloTelef?'on':''}" onclick="soloTelef=!soloTelef;renderList()">
-            📞 ${soloTelef?'Con tel.':'Todos'}
-          </div>
-          <div class="tab ${ftabWa?'on':''}" style="${ftabWa?'background:#064e3b;border-color:#10b981;color:#6ee7b7':''}"
-               onclick="ftabWa=!ftabWa;renderList()">
-            💬 Con WA
-          </div>
-          ${[['all','Todos'],['pending','⏳'],['interested','✅'],['callback','🔄'],['no','❌']].map(([k,l])=>
-            `<div class="tab ${ftab===k?'on':''}" onclick="ftab='${k}';renderList()">${l}</div>`
-          ).join('')}
-        </div>
-      </div>
-      <div class="list-scroll" id="listScroll">${listHTML(filtered)}</div>
-      <div class="bottom-bar">
-        <button class="bb-btn" onclick="exportCSV()">⬇️ CSV completo</button>
-        <button class="bb-btn" onclick="exportCSV(calls.filter(c=>c.status==='interested'))">⬇️ Solo interesados</button>
-      </div>
-    </div>
-  `;
-  setLayout(html);
-}
-
-function callCard(c){
-  const hasPhone = !!c.phone;
-  return `
-    <div class="cc-num">#${curIdx+1} de ${calls.length} &nbsp;·&nbsp; ${esc(c.typeLabel)} &nbsp;·&nbsp; ❌ Sin web</div>
-    <div class="cc-name">${esc(c.name)}</div>
-    ${c.address ? `<div class="cc-addr">📍 ${esc(c.address)}</div>` : ''}
-
-    ${hasPhone
-      ? `<div class="cc-phone"><a href="tel:${esc(c.phone.replace(/\D/g,''))}">${esc(c.phone)}</a></div>
-         <div style="font-size:.72rem;color:var(--faint);margin:-10px 0 10px">Toca para llamar</div>`
-      : `<div style="background:#1e293b;border:1px dashed var(--b);border-radius:8px;padding:10px;margin-bottom:10px;color:var(--faint);font-size:.8rem">
-           📵 Sin teléfono — busca en Google: <strong>${esc(c.name)}</strong>
-         </div>`
-    }
-
-    <!-- BLOQUE WHATSAPP -->
-    ${c.waPhone ? `
-    <div class="wa-box ${c.waStatus==='yes'?'confirmed':c.waStatus==='no'?'no-wa':''}">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.68rem;color:#86efac;margin-bottom:3px">
-          WhatsApp ${c.hasWaTag?'<span class="wa-tag">✓ Confirmado por OSM</span>':'— toca para verificar'}
-        </div>
-        <div class="wa-phone">${esc(c.waPhone)}</div>
-      </div>
-      <a class="btn-wa" href="https://wa.me/${waNum(c.waPhone)}" target="_blank">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Abrir WA
-      </a>
-      ${c.waStatus==='unknown' ? `
-        <button class="btn-wa-confirm" onclick="setWa(${curIdx},'yes')">✅ Tiene WA</button>
-        <button class="btn-wa-no" onclick="setWa(${curIdx},'no')">✗ No tiene</button>
-      ` : c.waStatus==='yes'
-        ? `<span style="color:#4ade80;font-size:.8rem;font-weight:700">✅ Confirmado</span>`
-        : `<span style="color:var(--faint);font-size:.78rem">✗ Sin WA</span>`
-      }
-    </div>` : ''}
-
-    <div class="act-grid">
-      <button class="a a1" onclick="mark('interested')"><span class="i">✅</span>Interesado</button>
-      <button class="a a2" onclick="mark('callback')"><span class="i">🔄</span>Rellamar</button>
-      <button class="a a3" onclick="mark('no')"><span class="i">❌</span>No interesa</button>
-      <button class="a a4" onclick="mark('skip')"><span class="i">⏭️</span>Siguiente</button>
-    </div>
-    <div class="notes-row" style="margin-top:10px">
-      <textarea class="notes-inp" rows="2" placeholder="Notas: nombre, qué dijo, cuándo rellamar..."
-        onchange="calls[${curIdx}].notes=this.value">${esc(c.notes)}</textarea>
-      <a class="maps-link" href="${esc(c.mapsUrl)}" target="_blank">🗺️<br>Ver</a>
-    </div>
-  `;
-}
-
-function waNum(p){ return p.replace(/\D/g,'').replace(/^0034/,'34').replace(/^0/,'34'); }
-function setWa(i, status){ calls[i].waStatus=status; renderAll(); }
-
-function listHTML(list){
-  if(!list.length) return '<div style="text-align:center;color:var(--faint);padding:30px;font-size:.78rem">Sin resultados</div>';
-  return list.map(c=>{
-    const i=calls.indexOf(c);
-    const dc={'pending':'dp','interested':'di','callback':'dc','no':'dn','skip':'ds','wa':'dot-wa'}[c.status]||'dp';
-    const waIcon = (c.waStatus==='yes'||c.hasWaTag) ? '<span class="wa-badge">WA</span>' : '';
-    return `
-      <div class="li ${i===curIdx?'cur':''}" onclick="jumpTo(${i})">
-        <span class="li-n">${i+1}</span>
-        <span class="dot ${(c.waStatus==='yes'||c.hasWaTag)?'dot-wa':dc}"></span>
-        <div class="li-info">
-          <div class="li-nm">${esc(c.name)}${waIcon}</div>
-          <div class="li-ad">${esc(c.address)||c.typeLabel}</div>
-        </div>
-        <span class="li-ph">${esc(c.phone)}</span>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderList(){
-  const el=document.getElementById('listScroll');
-  if(el) el.innerHTML=listHTML(getFiltered());
-}
-
-// ── ACCIONES ──────────────────────────────────────────────────────
-function mark(st){
-  if(!calls[curIdx]) return;
-  calls[curIdx].status=st;
-  const next=findNext(curIdx+1);
-  if(next!==-1) curIdx=next;
-  renderAll();
-  setTimeout(()=>document.querySelector('.li.cur')?.scrollIntoView({block:'nearest'}),50);
-}
-
-function jumpTo(i){ curIdx=i; renderAll(); }
-
-function findNext(from){
-  for(let i=from;i<calls.length;i++) if(calls[i].status==='pending') return i;
-  for(let i=0;i<from;i++) if(calls[i].status==='pending') return i;
-  return from<calls.length?from:calls.length-1;
-}
-
-function getStats(){
-  const s={pending:0,interested:0,callback:0,no:0,skip:0,done:0};
-  calls.forEach(c=>s[c.status]=(s[c.status]||0)+1);
-  s.done=calls.length-s.pending;
-  return s;
-}
-
-function getFiltered(){
-  return calls.filter(c=>{
-    if(soloTelef && !c.phone) return false;
-    if(ftabWa && c.waStatus!=='yes' && !c.hasWaTag) return false;
-    if(ftab!=='all'&&c.status!==ftab) return false;
-    if(fq){const q=fq.toLowerCase();return c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.address||'').toLowerCase().includes(q);}
-    return true;
-  });
-}
-
-// ── LAYOUT ────────────────────────────────────────────────────────
-function setLayout(html){document.getElementById('layout').innerHTML=html}
-function setLS(t){const e=document.getElementById('ls');if(e)e.textContent=t}
-function setLD(t){const e=document.getElementById('ld');if(e)e.textContent=t}
-
-// ── EXPORT ────────────────────────────────────────────────────────
-function exportCSV(list){
-  const data=list||calls;
-  if(!data.length) return alert('Sin resultados para exportar');
-  const rows=[['Nombre','Teléfono','WhatsApp','WA Confirmado','Dirección','Tipo','Estado','Notas','OpenStreetMap']];
-  data.forEach(c=>rows.push([c.name,c.phone,c.waPhone||'',c.waStatus==='yes'||c.hasWaTag?'Sí':'',c.address,c.typeLabel,c.status,c.notes,c.mapsUrl]));
-  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download=`llamadas_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-}
+  }, 400)
+}, 1800)
 </script>
 </body>
 </html>
