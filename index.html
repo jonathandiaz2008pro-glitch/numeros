@@ -133,13 +133,26 @@ header p{color:#bfdbfe;font-size:.78rem;margin-top:3px}
   </div>
   <div class="search-examples">
     <span style="font-size:.7rem;color:var(--faint);align-self:center">Ejemplos:</span>
-    <div class="ex" onclick="setQ('restaurantes en Malasaña Madrid')">🍽️ Malasaña Madrid</div>
-    <div class="ex" onclick="setQ('peluquerías en Gracia Barcelona')">✂️ Gracia Barcelona</div>
-    <div class="ex" onclick="setQ('bares en Triana Sevilla')">🍺 Triana Sevilla</div>
-    <div class="ex" onclick="setQ('talleres en Vallecas Madrid')">🚗 Vallecas Madrid</div>
-    <div class="ex" onclick="setQ('gimnasios en Valencia centro')">💪 Valencia centro</div>
-    <div class="ex" onclick="setQ('cafeterías en el Born Barcelona')">☕ El Born BCN</div>
-    <div class="ex" onclick="setQ('hoteles en Palma de Mallorca')">🏨 Palma Mallorca</div>
+    <div class="ex" onclick="setQ('restaurantes en Malasaña Madrid')">🍽️ Restaurantes Malasaña</div>
+    <div class="ex" onclick="setQ('peluquerías en Gracia Barcelona')">✂️ Peluquerías Gracia BCN</div>
+    <div class="ex" onclick="setQ('bares en Triana Sevilla')">🍺 Bares Triana Sevilla</div>
+    <div class="ex" onclick="setQ('talleres en Vallecas Madrid')">🚗 Talleres Vallecas</div>
+    <div class="ex" onclick="setQ('gimnasios en Valencia centro')">💪 Gimnasios Valencia</div>
+    <div class="ex" onclick="setQ('cafeterías en el Born Barcelona')">☕ Cafeterías El Born</div>
+    <div class="ex" onclick="setQ('hoteles en Palma de Mallorca')">🏨 Hoteles Palma</div>
+    <div class="ex" onclick="setQ('restaurantes en el Eixample Barcelona')">🍽️ Eixample Barcelona</div>
+    <div class="ex" onclick="setQ('bares en Chueca Madrid')">🍺 Chueca Madrid</div>
+    <div class="ex" onclick="setQ('peluquerías en Nervión Sevilla')">✂️ Nervión Sevilla</div>
+    <div class="ex" onclick="setQ('talleres en Cornellà Barcelona')">🚗 Cornellà BCN</div>
+    <div class="ex" onclick="setQ('restaurantes en Salamanca Madrid')">🍽️ Salamanca Madrid</div>
+    <div class="ex" onclick="setQ('cafeterías en Bilbao centro')">☕ Bilbao centro</div>
+    <div class="ex" onclick="setQ('peluquerías en Zaragoza centro')">✂️ Zaragoza centro</div>
+    <div class="ex" onclick="setQ('bares en el Cabanyal Valencia')">🍺 Cabanyal Valencia</div>
+    <div class="ex" onclick="setQ('restaurantes en Málaga centro')">🍽️ Málaga centro</div>
+    <div class="ex" onclick="setQ('talleres en Getafe Madrid')">🚗 Getafe Madrid</div>
+    <div class="ex" onclick="setQ('gimnasios en Murcia centro')">💪 Murcia centro</div>
+    <div class="ex" onclick="setQ('dentistas en Alicante centro')">🦷 Dentistas Alicante</div>
+    <div class="ex" onclick="setQ('panaderías en Lavapiés Madrid')">🥐 Lavapiés Madrid</div>
   </div>
   <div class="radius-chips" style="max-width:800px;margin:8px auto 0">
     <span style="font-size:.7rem;color:var(--faint);align-self:center">Radio:</span>
@@ -235,6 +248,7 @@ let calls = [];
 let curIdx = 0;
 let ftab = 'all';
 let fq = '';
+let soloTelef = true;
 let searchRadius = 1000;
 
 // ── UI HELPERS ─────────────────────────────────────────────────────
@@ -278,60 +292,69 @@ async function buscar(){
   `);
 
   try {
-    // 1. Detectar categoría — si no hay ninguna, busca TODOS los negocios
-    const cat = detectCat(raw);
-    const todosModo = !cat; // modo "todos los negocios de la zona"
-    const tags = cat ? cat.tags : ALL_BUSINESS_TAGS;
-    const label = cat ? cat.label : 'Negocios';
-    setLS(todosModo ? `Buscando todos los negocios sin web en la zona...` : `Buscando ${label.toLowerCase()}...`);
-
-    // 2. Geocodificar
+    // 1. Geocodificar primero
     const zoneText = limpiarZona(raw);
-    setLD(`Localizando: "${zoneText}"`);
+    setLS(`📍 Localizando "${zoneText}"...`);
+    setLD('');
     const coords = await geocodeNominatim(zoneText);
-    setLS(`📍 ${coords.display} · Buscando negocios sin web...`);
-    setLD(`Radio: ${searchRadius}m`);
+    setLS(`📍 ${coords.display} · Iniciando búsqueda...`);
 
-    // 3. Overpass query
-    const places = await overpassQuery(coords.lat, coords.lon, tags, searchRadius);
-    setLS(`Encontrados ${places.length} negocios. Filtrando los sin web...`);
-    setLD('Solo se mostrarán los que NO tienen página web registrada');
+    // 2. Detectar categoría
+    const cat = detectCat(raw);
+    const tags = cat ? cat.tags : ALL_BUSINESS_TAGS;
+    const label = cat ? cat.label : 'todos los negocios';
 
-    // 4. Filtrar: sin web. El teléfono es opcional (muchos no lo tienen en OSM)
+    // 3. Lanzar búsquedas en paralelo con radios escalonados si hay pocos resultados
+    let allPlaces = [];
+    const radii = searchRadius <= 2000
+      ? [searchRadius, searchRadius*2, searchRadius*4]   // escala automática si radio pequeño
+      : [searchRadius];
+
+    for(const r of radii){
+      setLS(`🔍 Buscando ${label} sin web con teléfono... (radio ${r>=1000?r/1000+'km':r+'m'})`);
+      setLD('Filtrando directamente en OpenStreetMap: con teléfono + sin web');
+      const batch = await overpassQueryFiltered(coords.lat, coords.lon, tags, r);
+      // deduplicar
+      const seen = new Set(allPlaces.map(p=>`${p.type}/${p.id}`));
+      for(const p of batch) if(!seen.has(`${p.type}/${p.id}`)) allPlaces.push(p);
+      setLD(`${allPlaces.length} encontrados hasta ahora...`);
+      if(allPlaces.length >= 80) break; // suficientes, no seguimos expandiendo
+      if(r < radii[radii.length-1]) await sleep(500);
+    }
+
+    setLS(`✅ Procesando ${allPlaces.length} resultados...`);
+
+    // 4. Convertir a objetos de llamada
     calls = [];
     const sinTelef = [];
-    for(const p of places){
+    for(const p of allPlaces){
       const t = p.tags||{};
-      const name = t.name||t['name:es']||'';
-      if(!name) continue; // sin nombre = no sirve
-      const website = t.website||t['contact:website']||t.url||t['website:es']||t['contact:url']||'';
-      if(website) continue; // tiene web → skip
-
-      const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||t['contact:mobile']||'');
+      const name = t.name||t['name:es']||''; if(!name) continue;
+      const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||t['contact:mobile']||t['phone:mobile']||'');
       const addr = buildAddr(t);
       const typeLabel = getTypeLabel(t);
       const mapsUrl = `https://www.openstreetmap.org/${p.type}/${p.id}`;
-      const obj = { id:`${p.type}/${p.id}`, name, phone, address:addr, typeLabel, mapsUrl, status:'pending', notes:'' };
-
+      const obj = {id:`${p.type}/${p.id}`, name, phone, address:addr, typeLabel, mapsUrl, status:'pending', notes:''};
       if(phone) calls.push(obj);
       else sinTelef.push(obj);
     }
-
-    // Primero los que tienen teléfono, luego los sin teléfono
     calls = [...calls, ...sinTelef];
 
     if(!calls.length){
       setLayout(`
         <div class="center">
-          <div class="ico">🎉</div>
-          <p>Todos los negocios encontrados en esta zona <strong>ya tienen web</strong>, o no aparecen en OpenStreetMap.<br><br>
-          Prueba con un <strong>radio mayor</strong> o una zona diferente.</p>
+          <div class="ico">😔</div>
+          <p>No se encontraron <strong>${label}</strong> sin web en esta zona.<br><br>
+          Prueba con un <strong>radio mayor</strong> o una zona diferente.<br>
+          También puedes probar sin especificar categoría: solo escribe la zona.</p>
         </div>
       `);
       return;
     }
 
-    curIdx=0; ftab='all'; fq='';
+    ftab='all'; fq=''; soloTelef=true;
+    curIdx = calls.findIndex(c=>c.phone);
+    if(curIdx<0) curIdx=0;
     renderAll();
 
   } catch(e){
@@ -435,6 +458,44 @@ async function fetchWithTimeout(url, options, ms=8000){
   }
 }
 
+// Versión filtrada: pide SOLO los que tienen teléfono Y no tienen web
+// Mucho más eficiente — menos datos, más resultados útiles
+async function overpassQueryFiltered(lat, lon, tags, radius){
+  const around=`(around:${radius},${lat},${lon})`;
+
+  // Construimos dos bloques:
+  // A) con "phone" + sin "website"
+  // B) con "contact:phone" + sin "website"
+  let partsPhone=[], partsContactPhone=[];
+  for(const tag of tags){
+    const base = `["${tag.k}"="${tag.v}"]${around}`;
+    partsPhone.push(`node${base}["phone"]["website"!~"."]["contact:website"!~"."];`);
+    partsPhone.push(`way${base}["phone"]["website"!~"."]["contact:website"!~"."];`);
+    partsContactPhone.push(`node${base}["contact:phone"]["website"!~"."]["contact:website"!~"."];`);
+    partsContactPhone.push(`way${base}["contact:phone"]["website"!~"."]["contact:website"!~"."];`);
+  }
+
+  const allParts = [...partsPhone, ...partsContactPhone];
+  const q=`[out:json][timeout:20];(${allParts.join('')});out center 500;`;
+  const body='data='+encodeURIComponent(q);
+
+  for(let i=0; i<OVERPASS_SERVERS.length; i++){
+    const server=OVERPASS_SERVERS[i];
+    setLD(`Servidor ${i+1}/${OVERPASS_SERVERS.length}...`);
+    try{
+      const r=await fetchWithTimeout(server,{
+        method:'POST', body,
+        headers:{'Content-Type':'application/x-www-form-urlencoded'}
+      }, 15000);
+      if(!r.ok) continue;
+      const d=await r.json();
+      return d.elements||[];
+    }catch(e){ /* prueba siguiente */ }
+  }
+  throw new Error('Los servidores de OpenStreetMap no responden. Inténtalo en unos segundos.');
+}
+
+// Versión sin filtro (fallback)
 async function overpassQuery(lat, lon, tags, radius){
   const around=`(around:${radius},${lat},${lon})`;
   let parts=[];
@@ -442,23 +503,17 @@ async function overpassQuery(lat, lon, tags, radius){
     parts.push(`node["${tag.k}"="${tag.v}"]${around};`);
     parts.push(`way["${tag.k}"="${tag.v}"]${around};`);
   }
-  const q=`[out:json][timeout:15];(${parts.join('')});out center 200;`;
+  const q=`[out:json][timeout:20];(${parts.join('')});out center 500;`;
   const body='data='+encodeURIComponent(q);
-
   for(let i=0; i<OVERPASS_SERVERS.length; i++){
-    const server=OVERPASS_SERVERS[i];
-    setLD(`Conectando al servidor ${i+1}/${OVERPASS_SERVERS.length}...`);
     try{
-      const r=await fetchWithTimeout(server,{
-        method:'POST', body,
-        headers:{'Content-Type':'application/x-www-form-urlencoded'}
-      }, 10000);
+      const r=await fetchWithTimeout(OVERPASS_SERVERS[i],{method:'POST',body,headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000);
       if(!r.ok) continue;
       const d=await r.json();
       return d.elements||[];
-    }catch(e){ /* prueba siguiente */ }
+    }catch(e){}
   }
-  throw new Error('Los servidores de OpenStreetMap no responden. Inténtalo de nuevo en unos segundos.');
+  throw new Error('Los servidores de OpenStreetMap no responden.');
 }
 
 // ── HELPERS DE DATOS ───────────────────────────────────────────────
@@ -492,10 +547,10 @@ function renderAll(){
   const html=`
     <div class="call-area">
       <div class="stats-bar">
-        <div class="sp"><div class="n">${calls.length}</div><div class="l">Total</div></div>
+        <div class="sp"><div class="n">${calls.filter(c=>c.phone).length}</div><div class="l">📞 Con tel.</div></div>
         <div class="sp"><div class="n ng">${stats.interested}</div><div class="l">Interesados</div></div>
         <div class="sp"><div class="n ny">${stats.callback}</div><div class="l">Rellamar</div></div>
-        <div class="sp"><div class="n nr">${stats.no}</div><div class="l">No</div></div>
+        <div class="sp"><div class="n nr">${stats.no}</div><div class="l">No interesa</div></div>
         <div class="sp"><div class="n nb">${stats.pending}</div><div class="l">Pendientes</div></div>
       </div>
       <div class="prog-bar-wrap">
@@ -511,6 +566,9 @@ function renderAll(){
       <div class="list-top">
         <input class="list-search" placeholder="🔍 Filtrar por nombre o teléfono..." oninput="fq=this.value;renderList()" value="${esc(fq)}">
         <div class="tabs">
+          <div class="tab ${soloTelef?'on':''}" onclick="soloTelef=!soloTelef;renderList()" title="Solo mostrar los que tienen teléfono">
+            📞 ${soloTelef?'Con tel.':'Todos'}
+          </div>
           ${[['all','Todos'],['pending','⏳ Pend.'],['interested','✅ Interes.'],['callback','🔄 Rellamar'],['no','❌ No']].map(([k,l])=>
             `<div class="tab ${ftab===k?'on':''}" onclick="ftab='${k}';renderList()">${l}</div>`
           ).join('')}
@@ -604,6 +662,7 @@ function getStats(){
 
 function getFiltered(){
   return calls.filter(c=>{
+    if(soloTelef && !c.phone) return false;
     if(ftab!=='all'&&c.status!==ftab) return false;
     if(fq){const q=fq.toLowerCase();return c.name.toLowerCase().includes(q)||c.phone.includes(q)||c.address.toLowerCase().includes(q);}
     return true;
