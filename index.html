@@ -68,6 +68,20 @@ header p{color:#bfdbfe;font-size:.78rem;margin-top:3px}
 .a3{background:#7f1d1d;color:#fca5a5}
 .a4{background:var(--s);color:var(--muted);border:1px solid var(--b)}
 
+/* WHATSAPP */
+.wa-box{background:#052e16;border:1px solid #16a34a;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wa-box.confirmed{background:#064e3b;border-color:#10b981}
+.wa-box.no-wa{background:#1c1917;border-color:#44403c;opacity:.6}
+.wa-phone{font-size:1.1rem;font-weight:800;color:#4ade80;flex:1}
+.wa-tag{font-size:.68rem;background:#14532d;color:#86efac;padding:2px 8px;border-radius:20px;font-weight:700}
+.btn-wa{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:5px;text-decoration:none;transition:all .15s;white-space:nowrap}
+.btn-wa:hover{background:#15803d}
+.btn-wa-confirm{background:#064e3b;border:1px solid #10b981;color:#6ee7b7;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.75rem;font-weight:700;transition:all .15s}
+.btn-wa-confirm:hover{background:#065f46}
+.btn-wa-no{background:var(--s);border:1px solid var(--b);color:var(--faint);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.75rem;transition:all .15s}
+.dot-wa{background:#22c55e}
+.wa-badge{font-size:.65rem;background:#14532d;color:#86efac;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:4px}
+
 .notes-row{display:flex;gap:7px;margin-top:10px}
 .notes-inp{flex:1;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 11px;color:var(--text);font-size:.8rem;resize:none}
 .notes-inp:focus{outline:none;border-color:var(--acc)}
@@ -249,6 +263,7 @@ let curIdx = 0;
 let ftab = 'all';
 let fq = '';
 let soloTelef = true;
+let ftabWa = false;
 let searchRadius = 1000;
 
 // ── UI HELPERS ─────────────────────────────────────────────────────
@@ -331,10 +346,13 @@ async function buscar(){
       const t = p.tags||{};
       const name = t.name||t['name:es']||''; if(!name) continue;
       const phone = normalizePhone(t.phone||t['contact:phone']||t['phone:es']||t['contact:mobile']||t['phone:mobile']||'');
+      const waRaw = t['contact:whatsapp']||t['whatsapp']||'';
+      const waPhone = normalizePhone(waRaw) || (phone ? phone : ''); // si tiene wa:tag úsalo, si no usa el teléfono para verificar
+      const hasWaTag = !!waRaw; // confirmado por OSM
       const addr = buildAddr(t);
       const typeLabel = getTypeLabel(t);
       const mapsUrl = `https://www.openstreetmap.org/${p.type}/${p.id}`;
-      const obj = {id:`${p.type}/${p.id}`, name, phone, address:addr, typeLabel, mapsUrl, status:'pending', notes:''};
+      const obj = {id:`${p.type}/${p.id}`, name, phone, waPhone, hasWaTag, address:addr, typeLabel, mapsUrl, status:'pending', waStatus:'unknown', notes:''};
       if(phone) calls.push(obj);
       else sinTelef.push(obj);
     }
@@ -566,10 +584,14 @@ function renderAll(){
       <div class="list-top">
         <input class="list-search" placeholder="🔍 Filtrar por nombre o teléfono..." oninput="fq=this.value;renderList()" value="${esc(fq)}">
         <div class="tabs">
-          <div class="tab ${soloTelef?'on':''}" onclick="soloTelef=!soloTelef;renderList()" title="Solo mostrar los que tienen teléfono">
+          <div class="tab ${soloTelef?'on':''}" onclick="soloTelef=!soloTelef;renderList()">
             📞 ${soloTelef?'Con tel.':'Todos'}
           </div>
-          ${[['all','Todos'],['pending','⏳ Pend.'],['interested','✅ Interes.'],['callback','🔄 Rellamar'],['no','❌ No']].map(([k,l])=>
+          <div class="tab ${ftabWa?'on':''}" style="${ftabWa?'background:#064e3b;border-color:#10b981;color:#6ee7b7':''}"
+               onclick="ftabWa=!ftabWa;renderList()">
+            💬 Con WA
+          </div>
+          ${[['all','Todos'],['pending','⏳'],['interested','✅'],['callback','🔄'],['no','❌']].map(([k,l])=>
             `<div class="tab ${ftab===k?'on':''}" onclick="ftab='${k}';renderList()">${l}</div>`
           ).join('')}
         </div>
@@ -590,13 +612,37 @@ function callCard(c){
     <div class="cc-num">#${curIdx+1} de ${calls.length} &nbsp;·&nbsp; ${esc(c.typeLabel)} &nbsp;·&nbsp; ❌ Sin web</div>
     <div class="cc-name">${esc(c.name)}</div>
     ${c.address ? `<div class="cc-addr">📍 ${esc(c.address)}</div>` : ''}
+
     ${hasPhone
       ? `<div class="cc-phone"><a href="tel:${esc(c.phone.replace(/\D/g,''))}">${esc(c.phone)}</a></div>
-         <div style="font-size:.72rem;color:var(--faint);margin:-10px 0 14px">Toca el número para llamar</div>`
-      : `<div style="background:#1e293b;border:1px dashed var(--b);border-radius:8px;padding:12px;margin-bottom:14px;color:var(--faint);font-size:.82rem">
-           📵 Sin teléfono registrado — busca en Google: <strong>${esc(c.name)}</strong>
+         <div style="font-size:.72rem;color:var(--faint);margin:-10px 0 10px">Toca para llamar</div>`
+      : `<div style="background:#1e293b;border:1px dashed var(--b);border-radius:8px;padding:10px;margin-bottom:10px;color:var(--faint);font-size:.8rem">
+           📵 Sin teléfono — busca en Google: <strong>${esc(c.name)}</strong>
          </div>`
     }
+
+    <!-- BLOQUE WHATSAPP -->
+    ${c.waPhone ? `
+    <div class="wa-box ${c.waStatus==='yes'?'confirmed':c.waStatus==='no'?'no-wa':''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.68rem;color:#86efac;margin-bottom:3px">
+          WhatsApp ${c.hasWaTag?'<span class="wa-tag">✓ Confirmado por OSM</span>':'— toca para verificar'}
+        </div>
+        <div class="wa-phone">${esc(c.waPhone)}</div>
+      </div>
+      <a class="btn-wa" href="https://wa.me/${waNum(c.waPhone)}" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Abrir WA
+      </a>
+      ${c.waStatus==='unknown' ? `
+        <button class="btn-wa-confirm" onclick="setWa(${curIdx},'yes')">✅ Tiene WA</button>
+        <button class="btn-wa-no" onclick="setWa(${curIdx},'no')">✗ No tiene</button>
+      ` : c.waStatus==='yes'
+        ? `<span style="color:#4ade80;font-size:.8rem;font-weight:700">✅ Confirmado</span>`
+        : `<span style="color:var(--faint);font-size:.78rem">✗ Sin WA</span>`
+      }
+    </div>` : ''}
+
     <div class="act-grid">
       <button class="a a1" onclick="mark('interested')"><span class="i">✅</span>Interesado</button>
       <button class="a a2" onclick="mark('callback')"><span class="i">🔄</span>Rellamar</button>
@@ -611,17 +657,21 @@ function callCard(c){
   `;
 }
 
+function waNum(p){ return p.replace(/\D/g,'').replace(/^0034/,'34').replace(/^0/,'34'); }
+function setWa(i, status){ calls[i].waStatus=status; renderAll(); }
+
 function listHTML(list){
   if(!list.length) return '<div style="text-align:center;color:var(--faint);padding:30px;font-size:.78rem">Sin resultados</div>';
   return list.map(c=>{
     const i=calls.indexOf(c);
-    const dc={'pending':'dp','interested':'di','callback':'dc','no':'dn','skip':'ds'}[c.status]||'dp';
+    const dc={'pending':'dp','interested':'di','callback':'dc','no':'dn','skip':'ds','wa':'dot-wa'}[c.status]||'dp';
+    const waIcon = (c.waStatus==='yes'||c.hasWaTag) ? '<span class="wa-badge">WA</span>' : '';
     return `
       <div class="li ${i===curIdx?'cur':''}" onclick="jumpTo(${i})">
         <span class="li-n">${i+1}</span>
-        <span class="dot ${dc}"></span>
+        <span class="dot ${(c.waStatus==='yes'||c.hasWaTag)?'dot-wa':dc}"></span>
         <div class="li-info">
-          <div class="li-nm">${esc(c.name)}</div>
+          <div class="li-nm">${esc(c.name)}${waIcon}</div>
           <div class="li-ad">${esc(c.address)||c.typeLabel}</div>
         </div>
         <span class="li-ph">${esc(c.phone)}</span>
@@ -663,8 +713,9 @@ function getStats(){
 function getFiltered(){
   return calls.filter(c=>{
     if(soloTelef && !c.phone) return false;
+    if(ftabWa && c.waStatus!=='yes' && !c.hasWaTag) return false;
     if(ftab!=='all'&&c.status!==ftab) return false;
-    if(fq){const q=fq.toLowerCase();return c.name.toLowerCase().includes(q)||c.phone.includes(q)||c.address.toLowerCase().includes(q);}
+    if(fq){const q=fq.toLowerCase();return c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.address||'').toLowerCase().includes(q);}
     return true;
   });
 }
@@ -678,8 +729,8 @@ function setLD(t){const e=document.getElementById('ld');if(e)e.textContent=t}
 function exportCSV(list){
   const data=list||calls;
   if(!data.length) return alert('Sin resultados para exportar');
-  const rows=[['Nombre','Teléfono','Dirección','Tipo','Estado','Notas','OpenStreetMap']];
-  data.forEach(c=>rows.push([c.name,c.phone,c.address,c.typeLabel,c.status,c.notes,c.mapsUrl]));
+  const rows=[['Nombre','Teléfono','WhatsApp','WA Confirmado','Dirección','Tipo','Estado','Notas','OpenStreetMap']];
+  data.forEach(c=>rows.push([c.name,c.phone,c.waPhone||'',c.waStatus==='yes'||c.hasWaTag?'Sí':'',c.address,c.typeLabel,c.status,c.notes,c.mapsUrl]));
   const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
