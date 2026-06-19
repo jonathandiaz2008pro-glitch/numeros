@@ -403,23 +403,27 @@ tr:hover td{background:rgba(30,41,59,.4)}
           onkeydown="if(event.key==='Enter')buscar()">
         <button class="search-btn" id="btn" onclick="buscar()">🔍 Buscar leads</button>
       </div>
-      <div class="examples">
-        <span style="font-size:.68rem;color:var(--faint);align-self:center">Ejemplos:</span>
-        <div class="ex" onclick="setQ('restaurantes en Malasaña Madrid')">🍽️ Restaurantes Malasaña</div>
-        <div class="ex" onclick="setQ('peluquerías en Gracia Barcelona')">✂️ Peluquerías Gracia BCN</div>
-        <div class="ex" onclick="setQ('bares en Triana Sevilla')">🍺 Bares Triana Sevilla</div>
-        <div class="ex" onclick="setQ('talleres en Vallecas Madrid')">🚗 Talleres Vallecas</div>
-        <div class="ex" onclick="setQ('gimnasios en Valencia centro')">💪 Gimnasios Valencia</div>
-        <div class="ex" onclick="setQ('cafeterías en el Born Barcelona')">☕ Cafeterías El Born</div>
-        <div class="ex" onclick="setQ('hoteles en Palma de Mallorca')">🏨 Hoteles Palma</div>
-        <div class="ex" onclick="setQ('dentistas en Alicante centro')">🦷 Dentistas Alicante</div>
-        <div class="ex" onclick="setQ('panaderías en Lavapiés Madrid')">🥐 Lavapiés Madrid</div>
-        <div class="ex" onclick="setQ('bares en Chueca Madrid')">🍺 Chueca Madrid</div>
-        <div class="ex" onclick="setQ('restaurantes en Salamanca Madrid')">🍽️ Salamanca Madrid</div>
-        <div class="ex" onclick="setQ('cafeterías en Bilbao centro')">☕ Bilbao centro</div>
-        <div class="ex" onclick="setQ('peluquerías en Zaragoza centro')">✂️ Zaragoza centro</div>
-        <div class="ex" onclick="setQ('restaurantes en Málaga centro')">🍽️ Málaga centro</div>
-        <div class="ex" onclick="setQ('gimnasios en Murcia centro')">💪 Murcia centro</div>
+      <!-- BANCO DE BÚSQUEDAS -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;max-width:900px">
+        <span style="font-size:.68rem;color:var(--faint)">Acceso rápido:</span>
+        <div class="ex" onclick="setQ('restaurantes en Malasaña Madrid');buscar()">🍽️ Restaurantes Malasaña</div>
+        <div class="ex" onclick="setQ('peluquerías en Gracia Barcelona');buscar()">✂️ Peluquerías Gracia</div>
+        <div class="ex" onclick="setQ('bares en Triana Sevilla');buscar()">🍺 Bares Triana</div>
+        <div class="ex" onclick="setQ('talleres en Vallecas Madrid');buscar()">🚗 Talleres Vallecas</div>
+        <div class="ex" onclick="setQ('gimnasios en Valencia centro');buscar()">💪 Gimnasios Valencia</div>
+        <button class="ex" onclick="toggleBanco()" id="btnBanco" style="background:#1e1b4b;border-color:var(--acc);color:#a5b4fc;font-weight:700">📋 Ver todas las búsquedas →</button>
+      </div>
+
+      <!-- PANEL BANCO COMPLETO -->
+      <div id="bancoBusquedas" style="display:none;max-width:900px;margin-top:10px;background:#0c1425;border:1px solid var(--b);border-radius:12px;padding:14px;max-height:340px;overflow-y:auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:.8rem;font-weight:700;color:var(--text)">📋 Banco de búsquedas — <span style="color:var(--acc3)">+150 búsquedas · 100 días de llamadas</span></span>
+          <button onclick="toggleBanco()" style="background:var(--b);border:none;border-radius:5px;padding:2px 8px;color:var(--muted);cursor:pointer;font-size:.75rem">✕ Cerrar</button>
+        </div>
+        <!-- Tabs de categorías -->
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px" id="bancoTabs"></div>
+        <!-- Grid de búsquedas -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px" id="bancoGrid"></div>
       </div>
       <div class="radius-row">
         <span style="font-size:.68rem;color:var(--faint)">Radio:</span>
@@ -1403,6 +1407,211 @@ function exportCSV(list){
   a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
   a.download=`leadpro_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+// ══════════════════════════════════════════════════════
+//  BANCO DE BÚSQUEDAS
+// ══════════════════════════════════════════════════════
+const BANCO = [
+  {cat:'🍽️ Restaurantes', color:'#f97316', items:[
+    'restaurantes en Malasaña Madrid','restaurantes en Chueca Madrid','restaurantes en Salamanca Madrid',
+    'restaurantes en Chamberí Madrid','restaurantes en Lavapiés Madrid','restaurantes en Retiro Madrid',
+    'restaurantes en Arganzuela Madrid','restaurantes en Moncloa Madrid','restaurantes en Vallecas Madrid',
+    'restaurantes en el Eixample Barcelona','restaurantes en Gracia Barcelona','restaurantes en Poble Sec Barcelona',
+    'restaurantes en el Born Barcelona','restaurantes en Sants Barcelona','restaurantes en Sant Andreu Barcelona',
+    'restaurantes en Triana Sevilla','restaurantes en Nervión Sevilla','restaurantes en Macarena Sevilla',
+    'restaurantes en centro Sevilla','restaurantes en Ruzafa Valencia','restaurantes en El Carmen Valencia',
+    'restaurantes en Benimaclet Valencia','restaurantes en Bilbao centro','restaurantes en Indautxu Bilbao',
+    'restaurantes en Málaga centro','restaurantes en El Soho Málaga','restaurantes en Alicante centro',
+    'restaurantes en Murcia centro','restaurantes en Zaragoza centro','restaurantes en Granada centro',
+    'restaurantes en Córdoba centro','restaurantes en Valladolid centro','restaurantes en Palma de Mallorca',
+    'restaurantes en Vigo centro','restaurantes en A Coruña centro','restaurantes en Gijón centro',
+    'restaurantes en Oviedo centro','restaurantes en Santander centro','restaurantes en San Sebastián centro',
+    'restaurantes en Pamplona centro','restaurantes en Logroño centro','restaurantes en Burgos centro',
+  ]},
+  {cat:'✂️ Peluquerías', color:'#ec4899', items:[
+    'peluquerías en Malasaña Madrid','peluquerías en Chamberí Madrid','peluquerías en Vallecas Madrid',
+    'peluquerías en Carabanchel Madrid','peluquerías en Leganés Madrid','peluquerías en Alcalá de Henares',
+    'peluquerías en Getafe Madrid','peluquerías en Móstoles Madrid','peluquerías en Alcorcón Madrid',
+    'peluquerías en Gracia Barcelona','peluquerías en Sants Barcelona','peluquerías en Horta Barcelona',
+    'peluquerías en Sant Andreu Barcelona','peluquerías en Hospitalet de Llobregat',
+    'peluquerías en Triana Sevilla','peluquerías en Nervión Sevilla','peluquerías en Macarena Sevilla',
+    'peluquerías en Ruzafa Valencia','peluquerías en Patraix Valencia','peluquerías en Torrent Valencia',
+    'peluquerías en Bilbao centro','peluquerías en Barakaldo Bilbao','peluquerías en Getxo Bilbao',
+    'peluquerías en Zaragoza centro','peluquerías en Delicias Zaragoza','peluquerías en Málaga centro',
+    'peluquerías en Alicante centro','peluquerías en Murcia centro','peluquerías en Granada centro',
+    'peluquerías en Valladolid centro','peluquerías en Palma de Mallorca','peluquerías en A Coruña centro',
+    'peluquerías en Vigo centro','peluquerías en Santander centro','peluquerías en Oviedo centro',
+    'peluquerías en Gijón centro','peluquerías en San Sebastián centro','peluquerías en Pamplona centro',
+  ]},
+  {cat:'🚗 Talleres', color:'#6366f1', items:[
+    'talleres en Vallecas Madrid','talleres en Carabanchel Madrid','talleres en Villaverde Madrid',
+    'talleres en Alcalá de Henares','talleres en Leganés Madrid','talleres en Getafe Madrid',
+    'talleres en Móstoles Madrid','talleres en Fuenlabrada Madrid','talleres en Alcorcón Madrid',
+    'talleres en Cornellà Barcelona','talleres en Hospitalet de Llobregat','talleres en Badalona Barcelona',
+    'talleres en Sabadell Barcelona','talleres en Terrassa Barcelona','talleres en Sant Boi Barcelona',
+    'talleres en Dos Hermanas Sevilla','talleres en Alcalá de Guadaíra Sevilla','talleres en Sevilla Este',
+    'talleres en Torrent Valencia','talleres en Paterna Valencia','talleres en Mislata Valencia',
+    'talleres en Barakaldo Bilbao','talleres en Basauri Bilbao','talleres en Getxo Bilbao',
+    'talleres en Zaragoza sur','talleres en Málaga este','talleres en Alicante norte',
+    'talleres en Murcia pedanías','talleres en Granada norte','talleres en Valladolid sur',
+    'talleres en Palma de Mallorca','talleres en Vigo sur','talleres en A Coruña sur',
+    'talleres en Gijón oeste','talleres en Santander oeste','talleres en Burgos sur',
+  ]},
+  {cat:'🍺 Bares', color:'#f59e0b', items:[
+    'bares en Malasaña Madrid','bares en Lavapiés Madrid','bares en Chueca Madrid',
+    'bares en La Latina Madrid','bares en Huertas Madrid','bares en Moncloa Madrid',
+    'bares en Barrio del Pilar Madrid','bares en Usera Madrid','bares en Vallecas Madrid',
+    'bares en el Born Barcelona','bares en Barceloneta Barcelona','bares en Gracia Barcelona',
+    'bares en Poble Sec Barcelona','bares en Poblenou Barcelona','bares en Sants Barcelona',
+    'bares en Triana Sevilla','bares en Alameda Sevilla','bares en centro Sevilla',
+    'bares en El Carmen Valencia','bares en Ruzafa Valencia','bares en Cabanyal Valencia',
+    'bares en Casco Viejo Bilbao','bares en Indautxu Bilbao','bares en Deusto Bilbao',
+    'bares en centro Málaga','bares en Soho Málaga','bares en Pedregalejo Málaga',
+    'bares en centro Zaragoza','bares en Casco Antiguo Zaragoza','bares en centro Granada',
+    'bares en Albaicín Granada','bares en centro Córdoba','bares en Valladolid centro',
+    'bares en Palma de Mallorca','bares en Vigo centro','bares en A Coruña centro',
+    'bares en Casco Viejo Pamplona','bares en Parte Vieja San Sebastián','bares en Ribera Burgos',
+  ]},
+  {cat:'☕ Cafeterías', color:'#a78bfa', items:[
+    'cafeterías en Chamberí Madrid','cafeterías en Retiro Madrid','cafeterías en Salamanca Madrid',
+    'cafeterías en Arganzuela Madrid','cafeterías en Tetuán Madrid','cafeterías en Hortaleza Madrid',
+    'cafeterías en el Born Barcelona','cafeterías en Eixample Barcelona','cafeterías en Sarrià Barcelona',
+    'cafeterías en centro Sevilla','cafeterías en Nervión Sevilla','cafeterías en centro Valencia',
+    'cafeterías en Bilbao centro','cafeterías en centro Málaga','cafeterías en centro Zaragoza',
+    'cafeterías en centro Granada','cafeterías en Valladolid centro','cafeterías en Palma de Mallorca',
+    'cafeterías en A Coruña centro','cafeterías en Santander centro','cafeterías en Oviedo centro',
+    'cafeterías en San Sebastián centro','cafeterías en Pamplona centro','cafeterías en Logroño centro',
+  ]},
+  {cat:'💪 Gimnasios', color:'#10b981', items:[
+    'gimnasios en Madrid norte','gimnasios en Madrid sur','gimnasios en Alcalá de Henares',
+    'gimnasios en Leganés Madrid','gimnasios en Getafe Madrid','gimnasios en Móstoles Madrid',
+    'gimnasios en Alcorcón Madrid','gimnasios en Fuenlabrada Madrid','gimnasios en Parla Madrid',
+    'gimnasios en Barcelona norte','gimnasios en Hospitalet de Llobregat','gimnasios en Badalona',
+    'gimnasios en Sabadell','gimnasios en Terrassa','gimnasios en Cornellà Barcelona',
+    'gimnasios en centro Sevilla','gimnasios en Dos Hermanas Sevilla','gimnasios en Valencia centro',
+    'gimnasios en Torrent Valencia','gimnasios en Bilbao centro','gimnasios en Barakaldo',
+    'gimnasios en Málaga centro','gimnasios en Zaragoza centro','gimnasios en Murcia centro',
+    'gimnasios en Granada centro','gimnasios en Alicante centro','gimnasios en Valladolid centro',
+    'gimnasios en Palma de Mallorca','gimnasios en Vigo centro','gimnasios en A Coruña',
+    'gimnasios en Gijón','gimnasios en Santander','gimnasios en Oviedo centro',
+  ]},
+  {cat:'🦷 Dentistas', color:'#3b82f6', items:[
+    'dentistas en Chamberí Madrid','dentistas en Salamanca Madrid','dentistas en Carabanchel Madrid',
+    'dentistas en Alcalá de Henares','dentistas en Leganés Madrid','dentistas en Getafe Madrid',
+    'dentistas en Eixample Barcelona','dentistas en Gracia Barcelona','dentistas en Badalona',
+    'dentistas en Hospitalet de Llobregat','dentistas en Sabadell','dentistas en Terrassa',
+    'dentistas en centro Sevilla','dentistas en Nervión Sevilla','dentistas en Valencia centro',
+    'dentistas en Torrent Valencia','dentistas en Bilbao centro','dentistas en Getxo',
+    'dentistas en Alicante centro','dentistas en Murcia centro','dentistas en Málaga centro',
+    'dentistas en Zaragoza centro','dentistas en Granada centro','dentistas en Valladolid centro',
+    'dentistas en Palma de Mallorca','dentistas en Vigo centro','dentistas en A Coruña centro',
+    'dentistas en Santander centro','dentistas en Oviedo centro','dentistas en Pamplona centro',
+  ]},
+  {cat:'💅 Estéticas', color:'#ec4899', items:[
+    'estéticas en Chamberí Madrid','estéticas en Salamanca Madrid','estéticas en Carabanchel Madrid',
+    'estéticas en Alcalá de Henares','estéticas en Móstoles Madrid','estéticas en Leganés Madrid',
+    'estéticas en Eixample Barcelona','estéticas en Gracia Barcelona','estéticas en Hospitalet de Llobregat',
+    'estéticas en Sabadell','estéticas en Badalona','estéticas en Terrassa',
+    'estéticas en Sevilla centro','estéticas en Nervión Sevilla','estéticas en Valencia centro',
+    'estéticas en Torrent Valencia','estéticas en Bilbao centro','estéticas en Alicante centro',
+    'estéticas en Murcia centro','estéticas en Málaga centro','estéticas en Zaragoza centro',
+    'estéticas en Granada centro','estéticas en Valladolid centro','estéticas en Palma de Mallorca',
+    'estéticas en A Coruña','estéticas en Vigo','estéticas en Santander','estéticas en Pamplona',
+  ]},
+  {cat:'🏨 Hoteles', color:'#f59e0b', items:[
+    'hoteles en Madrid centro','hoteles en Madrid norte','hoteles en Alcalá de Henares',
+    'hoteles en Barcelona centro','hoteles en Sitges Barcelona','hoteles en Lloret de Mar',
+    'hoteles en Sevilla centro','hoteles en Jerez de la Frontera','hoteles en Cádiz centro',
+    'hoteles en Valencia centro','hoteles en Gandía Valencia','hoteles en Benidorm Alicante',
+    'hoteles en Palma de Mallorca','hoteles en Ibiza centro','hoteles en Menorca',
+    'hoteles en Málaga centro','hoteles en Torremolinos','hoteles en Marbella',
+    'hoteles en Granada centro','hoteles en Ronda','hoteles en Córdoba centro',
+    'hoteles en San Sebastián','hoteles en Bilbao centro','hoteles en Santander centro',
+    'hoteles en A Coruña','hoteles en Santiago de Compostela','hoteles en Vigo centro',
+    'hoteles en Zaragoza centro','hoteles en Pamplona centro','hoteles en Burgos centro',
+  ]},
+  {cat:'🥐 Panaderías', color:'#f97316', items:[
+    'panaderías en Carabanchel Madrid','panaderías en Vallecas Madrid','panaderías en Lavapiés Madrid',
+    'panaderías en Chamberí Madrid','panaderías en Alcalá de Henares','panaderías en Leganés',
+    'panaderías en Sants Barcelona','panaderías en Gracia Barcelona','panaderías en Hospitalet',
+    'panaderías en Triana Sevilla','panaderías en Macarena Sevilla','panaderías en Valencia centro',
+    'panaderías en Bilbao centro','panaderías en Zaragoza centro','panaderías en Málaga centro',
+    'panaderías en Murcia centro','panaderías en Alicante centro','panaderías en Granada centro',
+    'panaderías en Valladolid centro','panaderías en A Coruña centro','panaderías en Vigo centro',
+  ]},
+  {cat:'🔧 Fontaneros', color:'#94a3b8', items:[
+    'fontaneros en Madrid norte','fontaneros en Madrid sur','fontaneros en Alcalá de Henares',
+    'fontaneros en Leganés Madrid','fontaneros en Getafe Madrid','fontaneros en Móstoles',
+    'fontaneros en Barcelona norte','fontaneros en Hospitalet de Llobregat','fontaneros en Badalona',
+    'fontaneros en Sabadell','fontaneros en Terrassa','fontaneros en Sevilla norte',
+    'fontaneros en Valencia norte','fontaneros en Bilbao norte','fontaneros en Zaragoza norte',
+    'fontaneros en Málaga norte','fontaneros en Alicante norte','fontaneros en Murcia norte',
+    'fontaneros en Valladolid norte','fontaneros en A Coruña','fontaneros en Vigo norte',
+  ]},
+  {cat:'💡 Electricistas', color:'#fbbf24', items:[
+    'electricistas en Madrid norte','electricistas en Madrid sur','electricistas en Alcalá de Henares',
+    'electricistas en Leganés Madrid','electricistas en Getafe Madrid','electricistas en Móstoles',
+    'electricistas en Barcelona norte','electricistas en Hospitalet de Llobregat','electricistas en Badalona',
+    'electricistas en Sabadell','electricistas en Terrassa','electricistas en Sevilla norte',
+    'electricistas en Valencia norte','electricistas en Bilbao norte','electricistas en Zaragoza norte',
+    'electricistas en Málaga norte','electricistas en Alicante','electricistas en Murcia norte',
+  ]},
+  {cat:'🐾 Veterinarios', color:'#34d399', items:[
+    'veterinarios en Chamberí Madrid','veterinarios en Vallecas Madrid','veterinarios en Alcalá de Henares',
+    'veterinarios en Leganés Madrid','veterinarios en Getafe Madrid','veterinarios en Móstoles',
+    'veterinarios en Eixample Barcelona','veterinarios en Gracia Barcelona','veterinarios en Badalona',
+    'veterinarios en Sevilla norte','veterinarios en Valencia centro','veterinarios en Bilbao centro',
+    'veterinarios en Zaragoza centro','veterinarios en Málaga centro','veterinarios en Alicante centro',
+    'veterinarios en Murcia centro','veterinarios en Granada centro','veterinarios en Valladolid',
+    'veterinarios en Palma de Mallorca','veterinarios en A Coruña','veterinarios en Vigo',
+  ]},
+  {cat:'🏋️ Centros fitness', color:'#818cf8', items:[
+    'centros fitness en Madrid norte','centros fitness en Madrid sur','centros fitness en Alcalá de Henares',
+    'centros fitness en Barcelona norte','centros fitness en Hospitalet','centros fitness en Badalona',
+    'centros fitness en Sevilla norte','centros fitness en Valencia norte','centros fitness en Bilbao',
+    'centros fitness en Zaragoza','centros fitness en Málaga','centros fitness en Alicante',
+    'centros fitness en Murcia','centros fitness en Granada','centros fitness en Valladolid',
+  ]},
+];
+
+let bancoActiveCat = 0;
+
+function toggleBanco(){
+  const el=document.getElementById('bancoBusquedas');
+  const btn=document.getElementById('btnBanco');
+  const visible=el.style.display!=='none';
+  el.style.display=visible?'none':'block';
+  btn.textContent=visible?'📋 Ver todas las búsquedas →':'✕ Cerrar banco';
+  if(!visible) renderBanco();
+}
+
+function renderBanco(){
+  // Tabs
+  const tabsEl=document.getElementById('bancoTabs');
+  tabsEl.innerHTML=BANCO.map((g,i)=>`
+    <div onclick="bancoActiveCat=${i};renderBanco()"
+      style="padding:4px 10px;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid ${i===bancoActiveCat?g.color:'var(--b)'};background:${i===bancoActiveCat?'rgba(0,0,0,.3)':'transparent'};color:${i===bancoActiveCat?g.color:'var(--muted)'};transition:all .12s">
+      ${g.cat} <span style="opacity:.7">(${g.items.length})</span>
+    </div>
+  `).join('');
+
+  // Grid
+  const g=BANCO[bancoActiveCat];
+  const gridEl=document.getElementById('bancoGrid');
+  gridEl.innerHTML=g.items.map(q=>`
+    <div onclick="setQ('${q.replace(/'/g,"\\'")}');toggleBanco();buscar()"
+      style="background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 10px;font-size:.72rem;color:var(--text);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:6px"
+      onmouseover="this.style.borderColor='${g.color}';this.style.color='${g.color}'"
+      onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--text)'">
+      <span style="font-size:.65rem;color:var(--faint)">${g.cat.split(' ')[0]}</span>
+      ${q.replace(/^[a-záéíóúñ]+ en /i,'').replace(/Madrid|Barcelona|Sevilla|Valencia|Bilbao|Málaga|Alicante|Murcia|Zaragoza|Granada|Valladolid|A Coruña|Vigo|Santander|Oviedo|Gijón|Pamplona|San Sebastián|Palma de Mallorca|Córdoba|Burgos|Logroño/g, m=>`<strong>${m}</strong>`)}
+    </div>
+  `).join('');
+
+  // Counter
+  const total=BANCO.reduce((s,g)=>s+g.items.length,0);
+  tabsEl.insertAdjacentHTML('beforebegin',`<div style="font-size:.68rem;color:var(--faint);margin-bottom:6px">Total: <strong style="color:var(--acc3)">${total} búsquedas</strong> · Haz clic en cualquiera para buscar automáticamente</div>`);
 }
 
 // ══════════════════════════════════════════════════════
