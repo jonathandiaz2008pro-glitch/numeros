@@ -560,7 +560,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="topbar-actions">
       <span class="text-xs text-muted" id="navPipeVal">Pipeline: €0</span>
       <button class="btn btn-primary btn-sm" onclick="goTo('search')">+ Buscar leads</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ CSV</button>
+      <div style="position:relative;display:inline-block" id="exportMenu">
+        <button class="btn btn-ghost btn-sm" onclick="toggleExportMenu()">⬇ Exportar ▾</button>
+        <div id="exportDropdown" style="display:none;position:absolute;right:0;top:34px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:140px;z-index:200">
+          <button onclick="exportCSV();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='none'">📄 CSV</button>
+          <button onclick="exportExcel();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='none'">📊 Excel</button>
+          <button onclick="exportPDF();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='none'">🖨️ PDF</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -712,11 +719,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div class="kpi blue"><div class="kpi-label">🏢 Leads totales</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">En tu CRM</div></div>
           <div class="kpi purple"><div class="kpi-label">📞 Contactados</div><div class="kpi-val" id="k-cont">0</div></div>
           <div class="kpi green"><div class="kpi-label">✅ Interesados</div><div class="kpi-val" id="k-inter">0</div></div>
-          <div class="kpi yellow"><div class="kpi-label">🤝 En reunión</div><div class="kpi-val" id="k-reun">0</div></div>
-          <div class="kpi orange"><div class="kpi-label">📄 Propuestas</div><div class="kpi-val" id="k-prop">0</div></div>
+          <div class="kpi yellow"><div class="kpi-label">🤝 Reuniones</div><div class="kpi-val" id="k-reun">0</div></div>
+          <div class="kpi orange"><div class="kpi-label">📄 Presupuestos</div><div class="kpi-val" id="k-prop">0</div></div>
+          <div class="kpi pink" style="--pink-val:var(--pink-text)"><div class="kpi-label">🔥 Negociación</div><div class="kpi-val" id="k-nego" style="color:var(--pink-text)">0</div></div>
           <div class="kpi green"><div class="kpi-label">💰 Ventas cerradas</div><div class="kpi-val" id="k-cerr">0</div></div>
           <div class="kpi purple"><div class="kpi-label">🔄 Conversión</div><div class="kpi-val" id="k-conv">0%</div></div>
-          <div class="kpi green"><div class="kpi-label">💵 Valor pipeline</div><div class="kpi-val" id="k-val">€0</div></div>
+          <div class="kpi green"><div class="kpi-label">💵 Valor potencial</div><div class="kpi-val" id="k-val">€0</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
           <div class="card"><div class="section-hd"><span class="section-title">Pipeline por etapa</span></div><div class="chart-wrap" id="chartPipeline"><div class="center" style="padding:20px"><div class="text-muted text-xs">Sin datos todavía</div></div></div></div>
@@ -749,8 +757,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
             <option value="">Todas las etapas</option>
             <option value="nuevo">Nuevos leads</option><option value="contactado">Contactados</option>
             <option value="interesado">Interesados</option><option value="reunion">En reunión</option>
-            <option value="propuesta">Propuesta</option><option value="negociacion">Negociación</option>
-            <option value="cerrado">Cerrados</option><option value="no">No interesa</option>
+            <option value="propuesta">Propuesta enviada</option><option value="negociacion">Negociación</option>
+            <option value="cerrado">Venta cerrada</option><option value="no">No interesa</option>
           </select>
           <select class="form-inp" id="leadsSort" style="max-width:180px" onchange="renderLeads()">
             <option value="score">Por puntuación</option><option value="name">Por nombre</option>
@@ -761,8 +769,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
         <div class="tbl-wrap">
           <table><thead><tr>
-            <th>Negocio</th><th>Teléfono</th><th>Sector</th><th>Ciudad</th>
-            <th>Etapa</th><th>Puntuación</th><th>Seguimiento</th><th>Acciones</th>
+            <th>Negocio</th><th>Teléfono</th><th>Sector</th><th>Estado web</th>
+            <th>Etapa</th><th>Score</th><th>Último contacto</th><th>Seguimiento</th><th>Acciones</th>
           </tr></thead><tbody id="leadsTbody"><tr><td colspan="8" class="center" style="padding:40px;color:var(--text2)">Busca negocios para añadir leads</td></tr></tbody></table>
         </div>
       </div>
@@ -1059,17 +1067,33 @@ function toggleFaq(el){const item=el.closest('.faq-item');item.classList.toggle(
 const SECTOR_BONUS = {Restaurante:15,Peluquería:12,Bar:10,'Bar/Pub':10,Gimnasio:8,Taller:10,'Taller mecánico':10,Hotel:15,Dentista:12,'Clínica dental':12,Veterinario:8};
 function calcScore(l){
   let s=0;
-  if(l.phone) s+=25;
-  if(l.waStatus==='yes') s+=20; else if(l.waStatus==='unknown'&&l.phone) s+=5;
-  if(l.address&&l.address.length>5) s+=10;
-  const sb={'nuevo':0,'contactado':8,'interesado':20,'reunion':30,'propuesta':35,'negociacion':40,'cerrado':50,'no':0};
+  if(l.phone) s+=25;                                               // +25 teléfono válido
+  if(l.waStatus==='yes') s+=15; else if(l.waStatus==='unknown'&&l.phone) s+=3;
+  if(l.address&&l.address.length>5) s+=8;                         // +8 dirección
+  if(!l.hasWeb) s+=10;                                             // +10 sin web
+  if(!l.hasSocialMedia) s+=7;                                      // +7 sin redes sociales
+  if(l.fewReviews) s+=5;                                           // +5 pocas reseñas
+  const sb={'nuevo':0,'contactado':5,'interesado':15,'reunion':25,'propuesta':30,'negociacion':35,'cerrado':50,'no':0};
   s += (sb[l.stage]||0);
   s += (SECTOR_BONUS[l.typeLabel]||5);
-  if(l.followUpDate) s+=5;
-  if(l.notes&&l.notes.length>10) s+=5;
+  if(l.followUpDate) s+=3;
+  if(l.notes&&l.notes.length>10) s+=3;
+  if(l.lastContact) s+=4;
   return Math.min(100, s);
 }
 function scoreColor(s){return s>=70?'var(--green-text)':s>=40?'var(--yellow-text)':'var(--text2)'}
+function scoreBreakdown(l){
+  const rows=[];
+  if(l.phone) rows.push(['Teléfono válido','+25']);
+  if(l.waStatus==='yes') rows.push(['Tiene WhatsApp','+15']);
+  if(l.address) rows.push(['Tiene dirección','+8']);
+  if(!l.hasWeb) rows.push(['Sin página web','+10']);
+  if(!l.hasSocialMedia) rows.push(['Sin redes sociales','+7']);
+  if(l.fewReviews) rows.push(['Pocas reseñas','+5']);
+  rows.push([`Sector: ${l.typeLabel||'Negocio'}`,`+${SECTOR_BONUS[l.typeLabel]||5}`]);
+  if(l.lastContact) rows.push(['Contactado antes','+4']);
+  return rows;
+}
 
 // ── PIPELINE STAGES ──
 const STAGES=[
@@ -1183,6 +1207,9 @@ function osmToLead(el){
     lat,lon,
     status:'pending',waStatus:'unknown',notes:'',stage:'nuevo',
     followUpDate:'',followUpNote:'',dealValue:0,
+    lastContact:'',contactHistory:[],
+    hasWeb:false,hasSocialMedia:false,fewReviews:false,
+    webStatus:'sin-web',commercialStatus:'pendiente',
     addedAt: new Date().toISOString()
   };
 }
@@ -1396,6 +1423,12 @@ function markStatus(status){
     if(status==='interested') leads[gIdx].stage='interesado';
     else if(status==='no') leads[gIdx].stage='no';
     else if(status==='callback') leads[gIdx].stage='contactado';
+    // Auto-log contact history
+    const today=new Date().toISOString().slice(0,10);
+    leads[gIdx].lastContact=today;
+    if(!leads[gIdx].contactHistory) leads[gIdx].contactHistory=[];
+    const statusLabel={interested:'Interesado ✅',no:'No interesa ✕',callback:'Rellamar 🔄',skip:'Saltado'};
+    leads[gIdx].contactHistory.push({type:'llamada',note:`Resultado: ${statusLabel[status]||status}`,date:new Date().toLocaleString('es'),msg:`Resultado: ${statusLabel[status]||status}`});
   }
   calls[curIdx].status = status;
   curIdx++;
@@ -1486,6 +1519,7 @@ function renderDashboard(){
   document.getElementById('k-inter').textContent = byStage('interesado');
   document.getElementById('k-reun').textContent = byStage('reunion');
   document.getElementById('k-prop').textContent = byStage('propuesta');
+  document.getElementById('k-nego').textContent = byStage('negociacion');
   document.getElementById('k-cerr').textContent = byStage('cerrado');
   const contacted = leads.filter(l=>l.stage!=='nuevo'&&l.stage!=='no').length;
   const conv = leads.length>0?((byStage('cerrado')/Math.max(contacted,1))*100).toFixed(1):0;
@@ -1638,17 +1672,24 @@ function renderLeads(onlyPhone=false, onlyWa=false){
   else if(sort==='fu') list.sort((a,b)=>(a.followUpDate||'9')<(b.followUpDate||'9')?-1:1);
   const tbody = document.getElementById('leadsTbody');
   if(!tbody) return;
-  if(!list.length){tbody.innerHTML='<tr><td colspan="8" class="center" style="padding:40px;color:var(--text2)">No hay leads con esos filtros</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="9" class="center" style="padding:40px;color:var(--text2)">No hay leads con esos filtros</td></tr>';return;}
   tbody.innerHTML = list.map(l=>{
     const score=calcScore(l);const gIdx=leads.indexOf(l);
     const stg=STAGES.find(s=>s.id===l.stage)||STAGES[0];
+    const webIcon={'sin-web':'🚫 Sin web','web-mala':'⚠️ Desact.','tiene-web':'✅ Tiene web'}[l.webStatus||'sin-web'];
     return `<tr>
-      <td><div class="td-primary" title="${l.name}">${l.name}</div><div class="td-muted">${l.typeLabel||''}</div></td>
+      <td><div class="td-primary" title="${l.name||''}">${l.name||'—'}</div><div class="td-muted">${l.typeLabel||''}</div></td>
       <td><div class="td-mono">${l.phone||'—'}</div>${l.waStatus==='yes'?'<span class="wa-badge">WA</span>':''}</td>
       <td class="td-muted">${l.typeLabel||'—'}</td>
-      <td class="td-muted">${(l.address||'').split(',').slice(-1)[0]?.trim()||'—'}</td>
+      <td style="font-size:11px">${webIcon}</td>
       <td><span class="pill pill-${l.stage||'nuevo'}" style="border-left:3px solid ${stg.dot}">${stg.label.replace(' 🎉','').replace(' ⭐','')}</span></td>
-      <td><span style="font-weight:700;color:${scoreColor(score)}">★ ${score}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:36px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${score}%;height:100%;background:${scoreColor(score)}"></div></div>
+          <span style="font-weight:700;font-size:12px;color:${scoreColor(score)}">${score}</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text2)">${l.lastContact||'—'}</td>
       <td>${l.followUpDate?`<span style="color:${isFuLate(l)?'var(--red-text)':'var(--yellow-text)'};font-size:12px">${l.followUpDate}</span>`:'<span class="td-muted">—</span>'}</td>
       <td>
         <div class="flex gap-2">
@@ -1667,47 +1708,197 @@ function renderLeads(onlyPhone=false, onlyWa=false){
 function openModal(idx){
   if(idx<0||idx>=leads.length) return;
   const l=leads[idx];
+  const score=calcScore(l);
+  const breakdown=scoreBreakdown(l);
+  const hist=(l.contactHistory||[]);
+  const waMsg=getWaTemplate(l);
   document.getElementById('modalTitle').textContent=l.name;
   document.getElementById('modalBody').innerHTML=`
-    <div class="form-grid2">
-      <div class="form-row"><div class="form-label">Nombre</div><input class="form-inp" value="${l.name||''}" onchange="leads[${idx}].name=this.value;save()"></div>
-      <div class="form-row"><div class="form-label">Teléfono</div><input class="form-inp" value="${l.phone||''}" onchange="leads[${idx}].phone=this.value;save()"></div>
-    </div>
-    <div class="form-grid2">
-      <div class="form-row"><div class="form-label">Sector</div><input class="form-inp" value="${l.typeLabel||''}" onchange="leads[${idx}].typeLabel=this.value;save()"></div>
-      <div class="form-row"><div class="form-label">Ciudad</div><input class="form-inp" value="${(l.address||'').split(',').slice(-1)[0]?.trim()||''}" onchange="leads[${idx}].city=this.value;save()"></div>
-    </div>
-    <div class="form-row"><div class="form-label">Dirección</div><input class="form-inp" value="${l.address||''}" onchange="leads[${idx}].address=this.value;save()"></div>
-    <div class="form-grid2">
-      <div class="form-row"><div class="form-label">Etapa pipeline</div>
-        <select class="form-inp" onchange="leads[${idx}].stage=this.value;save();toast('Etapa actualizada');updateBadges()">
-          ${STAGES.map(s=>`<option value="${s.id}"${l.stage===s.id?' selected':''}>${s.label}</option>`).join('')}
-        </select>
+    <!-- Score banner -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:14px">
+      <div style="text-align:center;min-width:60px">
+        <div style="font-size:28px;font-weight:900;color:${scoreColor(score)};line-height:1">${score}</div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Puntuación</div>
       </div>
-      <div class="form-row"><div class="form-label">Valor estimado (€)</div><input class="form-inp" type="number" value="${l.dealValue||''}" onchange="leads[${idx}].dealValue=Number(this.value);save()"></div>
-    </div>
-    <div class="form-grid2">
-      <div class="form-row"><div class="form-label">Próximo seguimiento</div><input class="form-inp" type="date" value="${l.followUpDate||''}" onchange="leads[${idx}].followUpDate=this.value;save()"></div>
-      <div class="form-row"><div class="form-label">WhatsApp</div>
-        <select class="form-inp" onchange="leads[${idx}].waStatus=this.value;save()">
-          <option value="unknown"${l.waStatus==='unknown'?' selected':''}>Sin verificar</option>
-          <option value="yes"${l.waStatus==='yes'?' selected':''}>✅ Tiene WA</option>
-          <option value="no"${l.waStatus==='no'?' selected':''}>✕ Sin WA</option>
-        </select>
+      <div style="flex:1">
+        <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px">
+          <div style="width:${score}%;height:100%;background:${scoreColor(score)};border-radius:4px;transition:width .5s ease"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${breakdown.map(([k,v])=>`<span style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--text2)">${k} <strong style="color:var(--green-text)">${v}</strong></span>`).join('')}
+        </div>
       </div>
     </div>
-    <div class="form-row"><div class="form-label">Nota de seguimiento</div><input class="form-inp" value="${l.followUpNote||''}" placeholder="Ej: Llamar por la mañana..." onchange="leads[${idx}].followUpNote=this.value;save()"></div>
-    <div class="form-row"><div class="form-label">Notas</div><textarea class="form-inp" rows="3" onchange="leads[${idx}].notes=this.value;save()">${l.notes||''}</textarea></div>
-    <div class="form-row"><div class="form-label">Plantilla WhatsApp</div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:12px;color:var(--text2);line-height:1.5">${getWaTemplate(l)}</div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px" id="modalTabs">
+      <button class="tab on" onclick="modalTab('info',this)">📋 Ficha</button>
+      <button class="tab" onclick="modalTab('wa',this)">💬 WhatsApp</button>
+      <button class="tab" onclick="modalTab('history',this)">📅 Historial</button>
     </div>
-    ${l.phone?`<a href="https://wa.me/${l.phone.replace(/\D/g,'')}?text=${encodeURIComponent(getWaTemplate(l))}" target="_blank" class="btn btn-green w-full mt-2" style="text-decoration:none;justify-content:center">💬 Abrir en WhatsApp</a>`:''}
-    ${l.mapsUrl?`<a href="${l.mapsUrl}" target="_blank" class="btn btn-ghost w-full mt-2" style="text-decoration:none;justify-content:center">🗺️ Ver en OpenStreetMap</a>`:''}
-    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-      <button class="btn btn-ghost btn-sm" style="color:var(--red-text)" onclick="deleteLead(${idx})">🗑 Eliminar lead</button>
+    <!-- TAB: FICHA -->
+    <div id="mtab-info">
+      <div class="form-grid2">
+        <div class="form-row"><div class="form-label">Nombre</div><input class="form-inp" value="${esc(l.name)}" onchange="leads[${idx}].name=this.value;save()"></div>
+        <div class="form-row"><div class="form-label">Teléfono</div><input class="form-inp" value="${esc(l.phone)}" onchange="leads[${idx}].phone=this.value;save()"></div>
+      </div>
+      <div class="form-grid2">
+        <div class="form-row"><div class="form-label">Sector / Categoría</div><input class="form-inp" value="${esc(l.typeLabel)}" onchange="leads[${idx}].typeLabel=this.value;save()"></div>
+        <div class="form-row"><div class="form-label">Ciudad</div><input class="form-inp" value="${esc((l.address||'').split(',').slice(-1)[0]?.trim())}" onchange="leads[${idx}].city=this.value;save()"></div>
+      </div>
+      <div class="form-row"><div class="form-label">Dirección completa</div><input class="form-inp" value="${esc(l.address)}" onchange="leads[${idx}].address=this.value;save()"></div>
+      <div class="form-grid2">
+        <div class="form-row"><div class="form-label">Estado web</div>
+          <select class="form-inp" onchange="leads[${idx}].webStatus=this.value;save()">
+            <option value="sin-web"${(l.webStatus||'sin-web')==='sin-web'?' selected':''}>🚫 Sin web</option>
+            <option value="web-mala"${l.webStatus==='web-mala'?' selected':''}>⚠️ Web desactualizada</option>
+            <option value="tiene-web"${l.webStatus==='tiene-web'?' selected':''}>✅ Tiene web</option>
+          </select>
+        </div>
+        <div class="form-row"><div class="form-label">Estado comercial</div>
+          <select class="form-inp" onchange="leads[${idx}].commercialStatus=this.value;save()">
+            <option value="pendiente"${(l.commercialStatus||'pendiente')==='pendiente'?' selected':''}>⏳ Pendiente</option>
+            <option value="contactado"${l.commercialStatus==='contactado'?' selected':''}>📞 Contactado</option>
+            <option value="interesado"${l.commercialStatus==='interesado'?' selected':''}>✅ Interesado</option>
+            <option value="no-interesa"${l.commercialStatus==='no-interesa'?' selected':''}>✕ No interesa</option>
+            <option value="cerrado"${l.commercialStatus==='cerrado'?' selected':''}>🎉 Cerrado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid2">
+        <div class="form-row"><div class="form-label">Etapa pipeline</div>
+          <select class="form-inp" onchange="leads[${idx}].stage=this.value;save();toast('Etapa actualizada');updateBadges()">
+            ${STAGES.map(s=>`<option value="${s.id}"${l.stage===s.id?' selected':''}>${s.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row"><div class="form-label">Valor potencial (€)</div><input class="form-inp" type="number" value="${l.dealValue||''}" onchange="leads[${idx}].dealValue=Number(this.value);save()"></div>
+      </div>
+      <div class="form-grid2">
+        <div class="form-row"><div class="form-label">Último contacto</div><input class="form-inp" type="date" value="${l.lastContact||''}" onchange="leads[${idx}].lastContact=this.value;save()"></div>
+        <div class="form-row"><div class="form-label">Próximo seguimiento</div><input class="form-inp" type="date" value="${l.followUpDate||''}" onchange="leads[${idx}].followUpDate=this.value;save()"></div>
+      </div>
+      <div class="form-row"><div class="form-label">Recordatorio / Nota seguimiento</div><input class="form-inp" value="${esc(l.followUpNote)}" placeholder="Ej: Llamar por la mañana, pedir por Paco..." onchange="leads[${idx}].followUpNote=this.value;save()"></div>
+      <div class="form-row"><div class="form-label">Sin redes sociales</div>
+        <label class="toggle"><input type="checkbox" ${l.hasSocialMedia?'':'checked'} onchange="leads[${idx}].hasSocialMedia=!this.checked;save()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-row"><div class="form-label">Pocas reseñas en Google</div>
+        <label class="toggle"><input type="checkbox" ${l.fewReviews?'checked':''} onchange="leads[${idx}].fewReviews=this.checked;save()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-row"><div class="form-label">Notas generales</div><textarea class="form-inp" rows="3" onchange="leads[${idx}].notes=this.value;save()">${esc(l.notes)}</textarea></div>
+      ${l.mapsUrl?`<a href="${l.mapsUrl}" target="_blank" class="btn btn-ghost w-full mt-2" style="text-decoration:none;justify-content:center">🗺️ Ver en OpenStreetMap</a>`:''}
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" style="color:var(--red-text)" onclick="deleteLead(${idx})">🗑 Eliminar lead</button>
+      </div>
+    </div>
+    <!-- TAB: WHATSAPP -->
+    <div id="mtab-wa" style="display:none">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Plantilla para ${esc(l.typeLabel)||'este sector'}</div>
+        <div id="waTemplateText" style="font-size:13px;line-height:1.7;color:var(--text)">${waMsg}</div>
+      </div>
+      <div class="flex gap-2 mb-3 flex-wrap">
+        <button class="btn btn-ghost btn-sm" onclick="copyWaMsg(${idx})">📋 Copiar mensaje</button>
+        ${l.phone?`<a href="https://wa.me/${l.phone.replace(/\D/g,'')}?text=${encodeURIComponent(waMsg)}" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none">💬 Abrir WhatsApp</a>`:''}
+        <select class="form-inp" style="max-width:160px;font-size:11px;padding:5px" onchange="changeWaTemplate(${idx},this.value)">
+          ${Object.keys(WA_TEMPLATES).map(k=>`<option value="${k}"${(l.typeLabel===k||k==='default'&&!WA_TEMPLATES[l.typeLabel])?'':''} ${k}>${k}</option>`).join('')}
+        </select>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Estado WhatsApp</div>
+      <div class="flex gap-2 mb-3">
+        <button class="btn btn-sm ${l.waStatus==='yes'?'btn-green':'btn-ghost'}" onclick="leads[${idx}].waStatus='yes';save();toast('✅ WA confirmado')">✅ Tiene WhatsApp</button>
+        <button class="btn btn-sm ${l.waStatus==='no'?'btn-secondary':'btn-ghost'}" style="${l.waStatus==='no'?'color:var(--red-text)':''}" onclick="leads[${idx}].waStatus='no';save();toast('Sin WhatsApp')">✕ Sin WhatsApp</button>
+        <button class="btn btn-ghost btn-sm" onclick="leads[${idx}].waStatus='unknown';save()">? Sin verificar</button>
+      </div>
+      <!-- Historial WA -->
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Historial de mensajes enviados</div>
+      <div id="waHistory" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto">
+        ${hist.filter(h=>h.type==='wa').length===0?'<div style="font-size:12px;color:var(--text2)">Ningún mensaje registrado aún</div>':
+          hist.filter(h=>h.type==='wa').map(h=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px"><div style="color:var(--text2);font-size:10px;margin-bottom:3px">${h.date} — ${h.channel}</div>${h.msg}</div>`).join('')}
+      </div>
+      <button class="btn btn-secondary btn-sm mt-3 w-full" onclick="logWaSent(${idx})">+ Registrar mensaje enviado</button>
+    </div>
+    <!-- TAB: HISTORIAL -->
+    <div id="mtab-history" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <select class="form-inp" id="histType" style="max-width:140px;font-size:12px;padding:5px">
+          <option value="llamada">📞 Llamada</option>
+          <option value="wa">💬 WhatsApp</option>
+          <option value="email">📧 Email</option>
+          <option value="reunion">🤝 Reunión</option>
+          <option value="nota">📝 Nota</option>
+        </select>
+        <input class="form-inp" id="histNote" placeholder="Ej: Habló con encargada, volverá a llamar..." style="font-size:12px">
+        <button class="btn btn-primary btn-sm" onclick="addHistory(${idx})">+ Añadir</button>
+      </div>
+      <div id="histList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
+        ${hist.length===0?'<div class="center" style="padding:24px"><span class="text-muted text-xs">Sin historial todavía</span></div>':
+          hist.slice().reverse().map(h=>`<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--acc);border-radius:var(--radius-sm);padding:10px 12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:700;color:var(--acc-text)">${h.type==='llamada'?'📞':h.type==='wa'?'💬':h.type==='email'?'📧':h.type==='reunion'?'🤝':'📝'} ${h.type.toUpperCase()}</span>
+              <span style="font-size:10px;color:var(--text2)">${h.date}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text)">${h.msg||h.note||'Sin nota'}</div>
+          </div>`).join('')}
+      </div>
     </div>
   `;
   document.getElementById('leadModal').classList.add('open');
+}
+
+function esc(v){return String(v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+function modalTab(name, el){
+  document.querySelectorAll('#modalTabs .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  ['info','wa','history'].forEach(t=>{
+    const el2=document.getElementById('mtab-'+t);
+    if(el2) el2.style.display=t===name?'':'none';
+  });
+}
+
+function copyWaMsg(idx){
+  const l=leads[idx];
+  navigator.clipboard.writeText(getWaTemplate(l)).then(()=>toast('Mensaje copiado al portapapeles ✓')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=getWaTemplate(l);document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Mensaje copiado ✓');
+  });
+}
+
+function changeWaTemplate(idx, key){
+  const l=leads[idx];
+  const msg=(WA_TEMPLATES[key]||WA_TEMPLATES.default).replace('{nombre}',l.name||'su negocio');
+  const el=document.getElementById('waTemplateText');
+  if(el) el.textContent=msg;
+}
+
+function logWaSent(idx){
+  const l=leads[idx];
+  const msg=getWaTemplate(l);
+  if(!leads[idx].contactHistory) leads[idx].contactHistory=[];
+  leads[idx].contactHistory.push({type:'wa',channel:'WhatsApp',date:new Date().toLocaleString('es'),msg});
+  leads[idx].lastContact=new Date().toISOString().slice(0,10);
+  save();toast('Mensaje registrado ✓');
+  const box=document.getElementById('waHistory');
+  if(box) box.innerHTML=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px"><div style="color:var(--text2);font-size:10px;margin-bottom:3px">${new Date().toLocaleString('es')} — WhatsApp</div>${msg}</div>`+box.innerHTML;
+}
+
+function addHistory(idx){
+  const type=document.getElementById('histType').value;
+  const note=document.getElementById('histNote').value.trim();
+  if(!note){toast('Escribe una nota','error');return;}
+  if(!leads[idx].contactHistory) leads[idx].contactHistory=[];
+  const entry={type,note,date:new Date().toLocaleString('es'),msg:note};
+  leads[idx].contactHistory.push(entry);
+  leads[idx].lastContact=new Date().toISOString().slice(0,10);
+  save();
+  document.getElementById('histNote').value='';
+  const list=document.getElementById('histList');
+  if(list){
+    const icons={llamada:'📞',wa:'💬',email:'📧',reunion:'🤝',nota:'📝'};
+    list.insertAdjacentHTML('afterbegin',`<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--acc);border-radius:var(--radius-sm);padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;font-weight:700;color:var(--acc-text)">${icons[type]||'📝'} ${type.toUpperCase()}</span><span style="font-size:10px;color:var(--text2)">${entry.date}</span></div>
+      <div style="font-size:12px;color:var(--text)">${note}</div>
+    </div>`);
+  }
+  toast('Entrada añadida al historial ✓');
 }
 
 function closeModal(){document.getElementById('leadModal').classList.remove('open')}
@@ -1925,6 +2116,12 @@ function renderBlog(){
 // ══════════════════════════════════════════════════
 //  SETTINGS
 // ══════════════════════════════════════════════════
+function toggleExportMenu(){
+  const d=document.getElementById('exportDropdown');
+  d.style.display=d.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',e=>{if(!document.getElementById('exportMenu')?.contains(e.target)){const d=document.getElementById('exportDropdown');if(d)d.style.display='none';}});
+
 function renderSettings(){
   const el=document.getElementById('settingsLeadsCount');if(el)el.textContent=leads.length;
   const el2=document.getElementById('settingsCerradas');if(el2)el2.textContent=leads.filter(l=>l.stage==='cerrado').length;
@@ -1932,16 +2129,54 @@ function renderSettings(){
 }
 
 // ══════════════════════════════════════════════════
-//  EXPORT CSV
+//  EXPORT
 // ══════════════════════════════════════════════════
 function exportCSV(list){
-  const data = list||leads;
+  const data=list||leads;
   if(!data.length){toast('Sin leads para exportar','error');return;}
-  const headers=['Nombre','Teléfono','Dirección','Sector','Etapa','Puntuación','WhatsApp','Valor (€)','Seguimiento','Notas','URL'];
-  const rows=data.map(l=>[l.name,l.phone,l.address,l.typeLabel,l.stage,calcScore(l),l.waStatus,l.dealValue||'',l.followUpDate,l.notes,l.mapsUrl].map(v=>'"'+(String(v||'').replace(/"/g,'""'))+'"'));
+  const headers=['Nombre','Teléfono','Dirección','Sector','Estado Web','Estado Comercial','Etapa','Puntuación','WhatsApp','Valor (€)','Último Contacto','Próximo Seguimiento','Notas','URL'];
+  const rows=data.map(l=>[l.name,l.phone,l.address,l.typeLabel,l.webStatus||'sin-web',l.commercialStatus||'pendiente',l.stage,calcScore(l),l.waStatus,l.dealValue||'',l.lastContact||'',l.followUpDate,l.notes,l.mapsUrl].map(v=>'"'+(String(v||'').replace(/"/g,'""'))+'"'));
   const csv=[headers.map(h=>'"'+h+'"').join(','),...rows.map(r=>r.join(','))].join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='leadpro-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);a.download='leadpro-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   toast('CSV exportado: '+data.length+' leads');
+}
+
+function exportExcel(list){
+  const data=list||leads;
+  if(!data.length){toast('Sin leads para exportar','error');return;}
+  const headers=['Nombre','Teléfono','Dirección','Sector','Estado Web','Estado Comercial','Etapa','Puntuación','WhatsApp','Valor €','Último Contacto','Próximo Seguimiento','Notas'];
+  const rows=data.map(l=>[l.name,l.phone,l.address,l.typeLabel,l.webStatus||'sin-web',l.commercialStatus||'pendiente',l.stage,calcScore(l),l.waStatus,l.dealValue||'',l.lastContact||'',l.followUpDate,l.notes]);
+  // Build XLS XML
+  const xml=`<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="LeadPro"><Table><Row>${headers.map(h=>`<Cell><Data ss:Type="String">${h}</Data></Cell>`).join('')}</Row>${rows.map(r=>`<Row>${r.map(v=>`<Cell><Data ss:Type="String">${String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`).join('')}</Row>`).join('')}</Table></Worksheet></Workbook>`;
+  const a=document.createElement('a');a.href='data:application/vnd.ms-excel;charset=utf-8,'+encodeURIComponent(xml);a.download='leadpro-'+new Date().toISOString().slice(0,10)+'.xls';a.click();
+  toast('Excel exportado: '+data.length+' leads');
+}
+
+function exportPDF(list){
+  const data=list||leads;
+  if(!data.length){toast('Sin leads para exportar','error');return;}
+  const stageLabel=s=>(STAGES.find(st=>st.id===s)||STAGES[0]).label;
+  const rows=data.map((l,i)=>`<tr style="background:${i%2===0?'#f8f9fa':'#fff'}">
+    <td>${i+1}</td><td><strong>${l.name||'—'}</strong><br><small>${l.typeLabel||''}</small></td>
+    <td>${l.phone||'—'}</td><td>${l.address||'—'}</td>
+    <td>${stageLabel(l.stage)}</td><td>${l.webStatus||'sin-web'}</td>
+    <td style="font-weight:700;color:${calcScore(l)>=70?'green':calcScore(l)>=40?'orange':'#888'}">${calcScore(l)}</td>
+    <td>€${Number(l.dealValue||0).toLocaleString('es')}</td>
+    <td>${l.lastContact||'—'}</td><td>${l.followUpDate||'—'}</td>
+    <td style="max-width:150px;font-size:11px">${l.notes||'—'}</td>
+  </tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LeadPro Export</title><style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#1f2328;margin:20px}
+    h1{font-size:20px;margin-bottom:4px}p{color:#636c76;font-size:12px;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse}th{background:#7c3aed;color:#fff;padding:8px 10px;text-align:left;font-size:11px}
+    td{padding:7px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top}
+    @media print{body{margin:0}}</style></head><body>
+    <h1>LeadPro — Exportación de Leads</h1>
+    <p>Fecha: ${new Date().toLocaleDateString('es')} · Total: ${data.length} leads · Valor total: €${data.reduce((s,l)=>s+(Number(l.dealValue)||0),0).toLocaleString('es')}</p>
+    <table><thead><tr><th>#</th><th>Negocio</th><th>Teléfono</th><th>Dirección</th><th>Etapa</th><th>Web</th><th>Score</th><th>Valor</th><th>Último contacto</th><th>Seguimiento</th><th>Notas</th></tr></thead><tbody>${rows}</tbody></table>
+    <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
+  toast('PDF listo para imprimir');
 }
 
 // ══════════════════════════════════════════════════
