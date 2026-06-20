@@ -1148,28 +1148,41 @@ async function geocodeNominatim(q){
   return null;
 }
 
-async function overpassQueryFiltered(lat,lon,tags,radius){
-  const tagFilters = tags.map(t=>`node["amenity"="${t}"]["phone"]["website"!~"https?://"]["contact:website"!~"https?://"];`+
-    `way["amenity"="${t}"]["phone"]["website"!~"https?://"]["contact:website"!~"https?://"];`).join('');
-  const q=`[out:json][timeout:25];(${tagFilters});out center 150;`;
+async function overpassQuery(lat,lon,tags,radius,strict){
+  // strict=true: solo con teléfono y sin web. strict=false: cualquier negocio del tipo
+  const noWeb = strict ? '["website"!~"https?://"]["contact:website"!~"https?://"]' : '';
+  const withPhone = strict ? '["phone"]' : '';
+  const tagFilters = tags.map(t=>
+    `node["amenity"="${t}"]${withPhone}${noWeb};`+
+    `way["amenity"="${t}"]${withPhone}${noWeb};`+
+    `node["shop"="${t}"]${withPhone}${noWeb};`
+  ).join('');
+  const q=`[out:json][timeout:30];(${tagFilters});out center 200;`;
   const servers=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.openstreetmap.ru/api/interpreter'];
   for(const srv of servers){
     try{
-      const r = await fetch(srv,{method:'POST',body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(15000)});
+      const ctrl=new AbortController();
+      const timer=setTimeout(()=>ctrl.abort(),18000);
+      const r=await fetch(srv,{method:'POST',body:'data='+encodeURIComponent(q),signal:ctrl.signal});
+      clearTimeout(timer);
       if(!r.ok) continue;
-      const d = await r.json();
+      const d=await r.json();
       if(d.elements){
         return d.elements.filter(el=>{
-          const lt = el.lat||(el.center&&el.center.lat);
-          const ln = el.lon||(el.center&&el.center.lon);
+          const lt=el.lat||(el.center&&el.center.lat);
+          const ln=el.lon||(el.center&&el.center.lon);
           if(!lt||!ln) return false;
-          const dist = Math.sqrt(Math.pow((lt-lat)*111000,2)+Math.pow((ln-lon)*111000*Math.cos(lat*Math.PI/180),2));
+          const dist=Math.sqrt(Math.pow((lt-lat)*111000,2)+Math.pow((ln-lon)*111000*Math.cos(lat*Math.PI/180),2));
           return dist<=radius;
         });
       }
     }catch(e){}
   }
   return [];
+}
+
+async function overpassQueryFiltered(lat,lon,tags,radius){
+  return overpassQuery(lat,lon,tags,radius,true);
 }
 
 // ── OVERPASS TAG MAP ──
@@ -1221,37 +1234,62 @@ async function buscar(){
   const q = document.getElementById('q').value.trim();
   if(!q){toast('Escribe qué buscar y dónde','error');return;}
   const btn = document.getElementById('btnSearch');
-  btn.textContent='⏳ Buscando...';btn.disabled=true;
+  btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div> Buscando...';
+  btn.disabled=true;
   showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Geocodificando ubicación...</div></div>');
-  showStats(0,0,0,0);
   try{
     const geo = await geocodeNominatim(q);
-    if(!geo){toast('No encontré esa ubicación. Intenta ser más específico','error');btn.textContent='🔍 Buscar';btn.disabled=false;return;}
+    if(!geo){
+      showCallArea('<div class="center" style="height:200px"><div class="ico">📍</div><strong style="color:var(--red-text)">Ubicación no encontrada</strong><span class="text-sm">Intenta escribir la ciudad de forma diferente<br>Ej: "restaurantes en Málaga" o "peluquerías Sevilla"</span></div>');
+      btn.innerHTML='🔍 Buscar';btn.disabled=false;return;
+    }
     const tags = extractTags(q);
-    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Consultando OpenStreetMap...</div></div>');
-    let elements = await overpassQueryFiltered(geo.lat,geo.lon,tags,searchRadius);
-    if(elements.length<10&&searchRadius<5000){
-      elements = await overpassQueryFiltered(geo.lat,geo.lon,tags,searchRadius*2);
+    let rad = searchRadius;
+    // FASE 1: búsqueda estricta (con teléfono, sin web)
+    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando negocios sin web con teléfono...</div></div>');
+    let elements = await overpassQuery(geo.lat,geo.lon,tags,rad,true);
+    // Ampliar radio automáticamente si hay pocos resultados
+    if(elements.length<8 && rad<10000){
+      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Ampliando radio de búsqueda...</div></div>');
+      elements = await overpassQuery(geo.lat,geo.lon,tags,rad*3,true);
     }
-    if(elements.length<5&&searchRadius<20000){
-      elements = await overpassQueryFiltered(geo.lat,geo.lon,tags,searchRadius*4);
+    if(elements.length<4 && rad<30000){
+      elements = await overpassQuery(geo.lat,geo.lon,tags,rad*8,true);
     }
-    calls = elements.map(osmToLead).filter(e=>e.phone);
-    // Merge into leads
+    // FASE 2: si sigue sin haber resultados, búsqueda amplia (sin filtro de teléfono)
+    let broadElements = [];
+    if(elements.length<3){
+      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando todos los negocios del tipo...</div></div>');
+      broadElements = await overpassQuery(geo.lat,geo.lon,tags,Math.max(rad*5,5000),false);
+    }
+    // Convertir a leads — los estrictos primero, luego los amplios que tengan teléfono
+    const strictLeads = elements.map(osmToLead);
+    const broadLeads = broadElements.map(osmToLead).filter(l=>l.phone && !strictLeads.find(s=>s.id===l.id));
+    calls = [...strictLeads, ...broadLeads].filter(l=>l.phone||l.name!=='Sin nombre');
+    // Ordenar: primero con teléfono, luego sin teléfono
+    calls.sort((a,b)=>(b.phone?1:0)-(a.phone?1:0));
+    // Merge into leads CRM
     let added=0;
-    calls.forEach(c=>{
+    calls.filter(c=>c.phone).forEach(c=>{
       if(!leads.find(l=>l.id===c.id)){leads.push(c);added++;}
     });
-    if(added>0){save();logActivity(`Búsqueda "${q}": ${added} nuevos leads`)}
+    if(added>0){save();logActivity(`Búsqueda "${q}": ${added} nuevos leads`);}
     curIdx=0;
     renderList();
     renderCallCard();
-    showStats(calls.length,calls.filter(c=>c.waStatus==='yes').length,calls.filter(c=>c.status==='interested').length,calls.filter(c=>c.status==='no').length);
     updateBadges();
-    if(calls.length===0){toast('No encontré negocios en esa zona. Prueba con un radio mayor.','error');}
-    else{toast(`${calls.length} negocios encontrados`);}
-  }catch(e){toast('Error buscando: '+e.message,'error');}
-  btn.textContent='🔍 Buscar';btn.disabled=false;
+    const withPhone = calls.filter(c=>c.phone).length;
+    if(calls.length===0){
+      showCallArea('<div class="center" style="height:250px"><div class="ico">🏙️</div><strong>Sin resultados para esta búsqueda</strong><span class="text-sm">Prueba con un radio mayor, otra ciudad cercana,<br>o una categoría diferente</span></div>');
+      toast('Sin resultados. Prueba con otro radio o ciudad.','error');
+    } else {
+      toast(`✅ ${withPhone} negocios con teléfono encontrados`);
+    }
+  }catch(e){
+    showCallArea('<div class="center" style="height:200px"><div class="ico">⚠️</div><strong style="color:var(--red-text)">Error en la búsqueda</strong><span class="text-sm">'+e.message+'<br>Comprueba tu conexión a internet</span></div>');
+    toast('Error: '+e.message,'error');
+  }
+  btn.innerHTML='🔍 Buscar';btn.disabled=false;
 }
 
 function showCallArea(html){document.getElementById('callArea').innerHTML=html;}
