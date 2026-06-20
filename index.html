@@ -802,14 +802,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
             </div>
             <div class="radius-row">
               <span class="text-xs text-muted">Radio:</span>
-              <div class="rc" id="r300" onclick="setR(300)">300m</div>
-              <div class="rc" id="r500" onclick="setR(500)">500m</div>
-              <div class="rc on" id="r1000" onclick="setR(1000)">1 km</div>
+              <div class="rc" id="r1000" onclick="setR(1000)">1 km</div>
               <div class="rc" id="r2000" onclick="setR(2000)">2 km</div>
-              <div class="rc" id="r5000" onclick="setR(5000)">5 km</div>
+              <div class="rc on" id="r5000" onclick="setR(5000)">5 km</div>
               <div class="rc" id="r10000" onclick="setR(10000)">10 km</div>
               <div class="rc" id="r25000" onclick="setR(25000)">25 km</div>
               <div class="rc" id="r50000" onclick="setR(50000)">50 km</div>
+              <div class="rc" id="r100000" onclick="setR(100000)">100 km</div>
             </div>
           </div>
           <div id="callArea"><div class="center" style="height:300px"><div class="ico">🎯</div><strong>Encuentra negocios sin web</strong><span class="text-sm">Escribe qué buscas y dónde, o usa el selector geográfico</span></div></div>
@@ -982,7 +981,7 @@ let calls = [];
 let curIdx = 0;
 let ftab = 'all';
 let ftabWa = false;
-let searchRadius = 1000;
+let searchRadius = 5000;
 let activity = JSON.parse(localStorage.getItem('lp_activity')||'[]');
 let waServerOk = false;
 let waChecking = false;
@@ -1251,22 +1250,18 @@ async function buscar(){
     const tags = extractTags(q);
     let rad = searchRadius;
     // FASE 1: búsqueda estricta (con teléfono, sin web)
-    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando negocios sin web con teléfono...</div></div>');
+    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando negocios sin web...</div></div>');
     let elements = await overpassQuery(geo.lat,geo.lon,tags,rad,true);
     // Ampliar radio automáticamente si hay pocos resultados
-    if(elements.length<8 && rad<10000){
-      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Ampliando radio de búsqueda...</div></div>');
-      elements = await overpassQuery(geo.lat,geo.lon,tags,rad*3,true);
+    if(elements.length<10){
+      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Ampliando búsqueda a radio mayor...</div></div>');
+      elements = await overpassQuery(geo.lat,geo.lon,tags,Math.max(rad*4,20000),true);
     }
-    if(elements.length<4 && rad<30000){
-      elements = await overpassQuery(geo.lat,geo.lon,tags,rad*8,true);
-    }
-    // FASE 2: si sigue sin haber resultados, búsqueda amplia (sin filtro de teléfono)
-    let broadElements = [];
-    if(elements.length<3){
-      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando todos los negocios del tipo...</div></div>');
-      broadElements = await overpassQuery(geo.lat,geo.lon,tags,Math.max(rad*5,5000),false);
-    }
+    // FASE 2: búsqueda amplia sin filtro de web (muchos negocios no tienen web en OSM aunque sí existe)
+    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando todos los negocios con teléfono...</div></div>');
+    let broadElements = await overpassQuery(geo.lat,geo.lon,tags,Math.max(rad*4,20000),false);
+    // Quitar los que ya aparecen en strict
+    broadElements = broadElements.filter(b=>!elements.find(e=>e.id===b.id));
     // Convertir a leads
     const strictLeads = elements.map(osmToLead);
     const broadLeads = broadElements.map(osmToLead).filter(l=>!strictLeads.find(s=>s.id===l.id));
