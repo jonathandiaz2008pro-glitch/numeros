@@ -1207,6 +1207,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 // ══════════════════════════════════════════════════
 
 // ── ESTADO GLOBAL ──
+const OWNER_KEY = 'lp_owner_jodro2025';
+const IS_OWNER = true; // Propietario — acceso Agencia ilimitado
+const PLAN = 'agency'; // free | pro | agency
 let leads = JSON.parse(localStorage.getItem('lp_leads')||'[]');
 let calls = [];
 let curIdx = 0;
@@ -2665,7 +2668,12 @@ function renderAll(){
   // Badges
   updateBadges();
 
-  console.log('🚀 LeadPro iniciado — leads CRM:', leads.length);
+  // Badge propietario en sidebar
+  const sbFooter = document.querySelector('.sb-footer');
+  if(sbFooter && IS_OWNER){
+    sbFooter.insertAdjacentHTML('afterbegin',`<div style="background:linear-gradient(135deg,var(--acc),#4f46e5);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:8px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px"><span>👑</span><span class="sb-theme-txt">Plan Agencia — Propietario</span></div>`);
+  }
+  console.log('🚀 LeadPro — Propietario · Plan Agencia · leads:', leads.length);
 })();
 </script>
 </body>
