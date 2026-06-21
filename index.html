@@ -370,6 +370,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .notes-ta:focus{outline:none;border-color:var(--acc)}
 .osm-link{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 9px;color:var(--text2);text-decoration:none;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:var(--transition);white-space:nowrap}
 .osm-link:hover{border-color:var(--acc);color:var(--acc-text)}
+.wsbtn{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;color:var(--text2);cursor:pointer;transition:var(--transition)}
+.wsbtn.on{background:var(--wc);border-color:var(--wc);color:#fff;font-weight:600}
+.wsbtn:hover:not(.on){border-color:var(--wc);color:var(--wc)}
 .search-list{display:flex;flex-direction:column;overflow:hidden}
 .list-top{padding:8px 10px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
 .list-scroll{flex:1;overflow-y:auto;padding:6px}
@@ -1725,6 +1728,16 @@ function renderCallCard(){
       <button class="act-btn act-no" onclick="markStatus('no')">✕<span>No interesa</span></button>
       <button class="act-btn act-skip" onclick="markStatus('skip')">⟩<span>Saltar</span></button>
     </div>
+    <!-- Estado web real -->
+    <div style="margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">¿Tiene web? <span style="font-weight:400;opacity:.7">Búscalo y marca aquí</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px">
+        <button onclick="setWebStatus('sin-web')" class="wsbtn${(l.webStatus||'sin-web')==='sin-web'?' on':''}" style="--wc:#ef4444">🚫 Sin web</button>
+        <button onclick="setWebStatus('web-mala')" class="wsbtn${l.webStatus==='web-mala'?' on':''}" style="--wc:#f59e0b">⚠️ Web mala</button>
+        <button onclick="setWebStatus('tiene-web')" class="wsbtn${l.webStatus==='tiene-web'?' on':''}" style="--wc:#22c55e">✅ Tiene web</button>
+      </div>
+      <a href="https://www.google.com/search?q=${encodeURIComponent(l.name+' '+(l.address||'').split(',').pop())}" target="_blank" style="font-size:11px;color:var(--acc-text);text-decoration:none">🔍 Buscar "${l.name}" en Google →</a>
+    </div>
     <div class="notes-row mt-2">
       <textarea class="notes-ta" rows="2" placeholder="Notas..." id="notesInp" oninput="saveNotes(this.value)">${l.notes||''}</textarea>
       <a href="${l.mapsUrl}" target="_blank" class="osm-link">🗺️<span>OSM</span></a>
@@ -1786,6 +1799,14 @@ function setWaStatus(s){
   calls[curIdx].waStatus = s;
   const gIdx = globalLeadIdx(calls[curIdx]);
   if(gIdx>=0) leads[gIdx].waStatus = s;
+  save();renderCallCard();
+}
+
+function setWebStatus(status){
+  if(!calls[curIdx]) return;
+  calls[curIdx].webStatus=status;
+  const gIdx=globalLeadIdx(calls[curIdx]);
+  if(gIdx>=0) leads[gIdx].webStatus=status;
   save();renderCallCard();
 }
 
