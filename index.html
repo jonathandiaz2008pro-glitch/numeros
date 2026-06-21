@@ -1462,15 +1462,12 @@ async function geocodeNominatim(q){
 }
 
 async function overpassQuery(lat,lon,tags,radius){
-  // Query simple: negocios del tipo con teléfono, dentro del radio en bbox
-  const R=radius/111000;
-  const bbox=`${lat-R},${lon-R*1.5},${lat+R},${lon+R*1.5}`;
+  const around=`around:${radius},${lat},${lon}`;
   const tagFilters=tags.map(t=>
-    `node["amenity"="${t}"]["phone"](${bbox});`+
-    `node["shop"="${t}"]["phone"](${bbox});`+
-    `way["amenity"="${t}"]["phone"](${bbox});`
+    `node["amenity"="${t}"]["phone"](${around});`+
+    `way["amenity"="${t}"]["phone"](${around});`
   ).join('');
-  const q=`[out:json][timeout:20];(${tagFilters});out center 300;`;
+  const q=`[out:json][timeout:25];(${tagFilters});out center 300;`;
   const servers=[
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
@@ -1479,13 +1476,13 @@ async function overpassQuery(lat,lon,tags,radius){
   for(const srv of servers){
     try{
       const ctrl=new AbortController();
-      const timer=setTimeout(()=>ctrl.abort(),14000);
+      const timer=setTimeout(()=>ctrl.abort(),20000);
       const r=await fetch(srv,{method:'POST',body:'data='+encodeURIComponent(q),signal:ctrl.signal});
       clearTimeout(timer);
       if(!r.ok) continue;
       const d=await r.json();
-      if(d&&d.elements) return d.elements;
-    }catch(e){}
+      if(d&&d.elements&&d.elements.length>=0) return d.elements;
+    }catch(e){ continue; }
   }
   return [];
 }
@@ -1558,14 +1555,8 @@ async function buscar(){
       btn.innerHTML='🔍 Buscar';btn.disabled=false;return;
     }
     const tags = extractTags(q);
-    let rad = searchRadius;
-    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Buscando negocios con teléfono...</div></div>');
-    let elements = await overpassQuery(geo.lat,geo.lon,tags,rad);
-    // Si pocos resultados, ampliar radio una sola vez
-    if(elements.length<8 && rad<50000){
-      showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Ampliando radio de búsqueda...</div></div>');
-      elements = await overpassQuery(geo.lat,geo.lon,tags,Math.min(rad*3,50000));
-    }
+    showCallArea('<div class="center" style="height:200px"><div class="spinner"></div><div class="text-muted text-xs mt-3">Consultando OpenStreetMap...</div></div>');
+    const elements = await overpassQuery(geo.lat,geo.lon,tags,searchRadius);
     calls = elements.map(osmToLead).filter(l=>l.phone||l.instagram||l.facebook);
     calls.sort((a,b)=>(b.phone?1:0)-(a.phone?1:0));
     // Merge into leads CRM
