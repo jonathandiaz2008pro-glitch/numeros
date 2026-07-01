@@ -373,6 +373,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .wsbtn{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;color:var(--text2);cursor:pointer;transition:var(--transition)}
 .wsbtn.on{background:var(--wc);border-color:var(--wc);color:#fff;font-weight:600}
 .wsbtn:hover:not(.on){border-color:var(--wc);color:var(--wc)}
+.pres-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--pc);background:color-mix(in srgb,var(--pc) 12%,transparent);border:1px solid color-mix(in srgb,var(--pc) 30%,transparent);border-radius:20px;padding:2px 7px;white-space:nowrap}
+.pres-tag{font-size:11px;font-weight:600;color:var(--pc)}
+.pres-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.ptab{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:10px;cursor:pointer;color:var(--text2);transition:var(--transition);font-family:var(--font);white-space:nowrap}
+.ptab.on{background:var(--pt-bg,var(--acc-soft));border-color:var(--pt-c,var(--acc));color:var(--pt-c,var(--acc-text));font-weight:700}
+.ptab:hover:not(.on){border-color:var(--pt-c,var(--acc));color:var(--pt-c,var(--acc-text))}
 .search-list{display:flex;flex-direction:column;overflow:hidden}
 .list-top{padding:8px 10px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
 .list-scroll{flex:1;overflow-y:auto;padding:6px}
@@ -838,6 +844,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
               <button class="tab" onclick="setFtab('interested',this)">✅ Int.</button>
               <button class="tab" onclick="setFtab('callback',this)">🔄 Rellamar</button>
               <button class="tab" style="color:var(--green-text)" onclick="setFtabWa()">💬 WA</button>
+            </div>
+            <div class="pres-row" id="presFilters">
+              <button class="ptab on" style="--pt-c:#8b949e" onclick="setPresFilter('all',this)">🌐 Todos</button>
+              <button class="ptab" style="--pt-c:#dc2626" onclick="setPresFilter('sin-presencia',this)">🔴 Sin web</button>
+              <button class="ptab" style="--pt-c:#ea580c" onclick="setPresFilter('solo-instagram',this)">🟠 Solo IG</button>
+              <button class="ptab" style="--pt-c:#ea580c" onclick="setPresFilter('solo-facebook',this)">🟠 Solo FB</button>
+              <button class="ptab" style="--pt-c:#f59e0b" onclick="setPresFilter('fresha',this)">🟡 Fresha</button>
+              <button class="ptab" style="--pt-c:#f59e0b" onclick="setPresFilter('booksy',this)">🟡 Booksy</button>
+              <button class="ptab" style="--pt-c:#f59e0b" onclick="setPresFilter('treatwell',this)">🟡 Treatwell</button>
+              <button class="ptab" style="--pt-c:#16a34a" onclick="setPresFilter('web-propia',this)">🟢 Web propia</button>
             </div>
           </div>
           <div class="list-scroll" id="listScroll"></div>
@@ -1519,6 +1535,41 @@ function extractTags(queryStr){
   return ['restaurant','bar','cafe','hairdresser','fitness_centre','car_repair','dentist','hotel','veterinary','beauty'];
 }
 
+// ── PRESENCE DETECTION ──────────────────────────────────────────────────────
+// Modular: add new platforms here without touching anything else
+const PRESENCE_PLATFORMS = [
+  { id:'fresha',     label:'Fresha',     emoji:'🟡', color:'#f59e0b', match: u=>u.includes('fresha.com') },
+  { id:'booksy',     label:'Booksy',     emoji:'🟡', color:'#f59e0b', match: u=>u.includes('booksy.com') },
+  { id:'treatwell',  label:'Treatwell',  emoji:'🟡', color:'#f59e0b', match: u=>u.includes('treatwell.com') },
+  { id:'wix',        label:'Wix',        emoji:'🟡', color:'#f59e0b', match: u=>u.includes('wix.com')||u.includes('wixsite.com') },
+  { id:'shopify',    label:'Shopify',    emoji:'🟢', color:'#16a34a', match: u=>u.includes('myshopify.com') },
+  { id:'google-biz', label:'Google Biz', emoji:'🟡', color:'#f59e0b', match: u=>u.includes('business.site') },
+];
+
+function detectPresence(lead){
+  const url = (lead.website||'').toLowerCase();
+  if(url){
+    for(const p of PRESENCE_PLATFORMS){
+      if(p.match(url)) return { id:p.id, label:p.label, emoji:p.emoji, color:p.color };
+    }
+    // Has a real domain not matching any platform
+    return { id:'web-propia', label:'Web propia', emoji:'🟢', color:'#16a34a' };
+  }
+  // No website tag — check socials
+  const hasIG = !!lead.instagram;
+  const hasFB = !!lead.facebook;
+  if(hasIG && !hasFB) return { id:'solo-instagram', label:'Solo Instagram', emoji:'🟠', color:'#ea580c' };
+  if(hasFB && !hasIG) return { id:'solo-facebook',  label:'Solo Facebook',  emoji:'🟠', color:'#ea580c' };
+  if(hasIG && hasFB)  return { id:'solo-redes',     label:'Redes sociales', emoji:'🟠', color:'#ea580c' };
+  return { id:'sin-presencia', label:'Sin presencia', emoji:'🔴', color:'#dc2626' };
+}
+
+function presenceBadge(lead){
+  const p = lead.presence || detectPresence(lead);
+  return `<span class="pres-badge" style="--pc:${p.color}" title="${p.label}">${p.emoji} ${p.label}</span>`;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 function osmToLead(el){
   const t=el.tags||{};
   const lat=el.lat||(el.center&&el.center.lat)||0;
@@ -1528,7 +1579,8 @@ function osmToLead(el){
   const instagram=t['contact:instagram']||t['instagram']||'';
   const facebook=t['contact:facebook']||t['facebook']||'';
   const phone=t.phone||t['contact:phone']||t['phone:mobile']||'';
-  return {
+  const website=t.website||t['contact:website']||t['url']||'';
+  const lead = {
     id: el.type+'/'+el.id,
     name: t.name||t['name:es']||'Sin nombre',
     phone,
@@ -1536,6 +1588,7 @@ function osmToLead(el){
     hasWaTag: !!(t.contact_whatsapp||t['contact:whatsapp']),
     instagram,
     facebook,
+    website,
     address: [t['addr:street'],t['addr:housenumber'],t['addr:city']].filter(Boolean).join(', '),
     typeLabel: typeMap[amenity]||amenity||'Negocio',
     mapsUrl: `https://www.openstreetmap.org/${el.type}/${el.id}`,
@@ -1543,10 +1596,12 @@ function osmToLead(el){
     status:'pending',waStatus:'unknown',notes:'',stage:'nuevo',
     followUpDate:'',followUpNote:'',dealValue:0,
     lastContact:'',contactHistory:[],
-    hasWeb:false,hasSocialMedia:!!(instagram||facebook),fewReviews:false,
+    hasWeb:!!website,hasSocialMedia:!!(instagram||facebook),fewReviews:false,
     webStatus:'sin-web',commercialStatus:'pendiente',
     addedAt: new Date().toISOString()
   };
+  lead.presence = detectPresence(lead);
+  return lead;
 }
 
 // ══════════════════════════════════════════════════
@@ -1711,6 +1766,7 @@ function renderCallCard(){
       <span class="pill pill-${l.stage||'nuevo'}">${getStageLabel(l.stage)}</span>
       <span style="margin-left:6px;font-size:10px;color:${scoreColor(score)};font-weight:700">★ ${score}</span>
       ${l.typeLabel?`<span style="margin-left:6px;font-size:11px;color:var(--text2)">${l.typeLabel}</span>`:''}
+      ${presenceBadge(l)}
     </div>
     <div class="cc-name">${l.name}</div>
     <div class="cc-addr">📍 ${l.address||'Sin dirección'}</div>
@@ -1842,25 +1898,38 @@ function setFtabWa(){
   renderList();
 }
 
+let presFilter = 'all';
+function setPresFilter(id, btn){
+  presFilter = id;
+  document.querySelectorAll('#presFilters .ptab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  renderList();
+}
+
 function renderList(){
   const q = (document.getElementById('listQ')||{}).value||'';
   let list = [...calls];
   if(ftab!=='all') list=list.filter(l=>l.status===ftab);
   if(ftabWa) list=list.filter(l=>l.waStatus==='yes');
+  if(presFilter!=='all') list=list.filter(l=>(l.presence||detectPresence(l)).id===presFilter);
   if(q) list=list.filter(l=>(l.name+l.phone+l.address).toLowerCase().includes(q.toLowerCase()));
   const cont = document.getElementById('listScroll');
   if(!cont) return;
   if(!list.length){cont.innerHTML='<div class="text-muted text-xs" style="padding:12px">Sin resultados</div>';return;}
-  cont.innerHTML = list.map((l,i)=>{
+  cont.innerHTML = list.map((l)=>{
     const realIdx = calls.indexOf(l);
     const score=calcScore(l);
     const stg = STAGES.find(s=>s.id===l.stage)||STAGES[0];
+    const pres = l.presence || detectPresence(l);
     return `<div class="list-item${realIdx===curIdx?' cur':''}" onclick="jumpTo(${realIdx})">
       <span class="li-n">${realIdx+1}</span>
       <span class="li-dot" style="background:${stg.dot}"></span>
       <div class="li-info">
         <div class="li-name">${l.name}${l.waStatus==='yes'?'<span class="wa-badge">WA</span>':''}</div>
-        <div class="li-addr">${l.typeLabel||''} · ${l.address||''}</div>
+        <div class="li-addr" style="display:flex;align-items:center;gap:5px">
+          <span class="pres-tag" style="--pc:${pres.color}" title="${pres.label}">${pres.emoji}</span>
+          <span>${l.typeLabel||''} · ${l.address||''}</span>
+        </div>
       </div>
       <span class="li-ph" style="color:${scoreColor(score)}">${score}</span>
     </div>`;
